@@ -1,9 +1,9 @@
-/* ------------------------- Styleguide ® Code by Dennis -------------------------------------------------- */
+/* ------------------------- Styleguide -------------------------------------------------- */
 
 /* ------------------------- Fonts -------------------------------------------------- */
 
 @font-face {
-    font-family: 'Dennis Sans';
+    font-family: 'James Sans';
     src: url('../fonts/NeueMontreal-Light.otf') format('opentype');
     font-weight: 300;
     font-style: normal;
@@ -11,7 +11,7 @@
 }
 
 @font-face {
-    font-family: 'Dennis Sans';
+    font-family: 'James Sans';
     src: url('../fonts/NeueMontreal-LightItalic.otf') format('opentype');
     font-weight: 300;
     font-style: italic;
@@ -19,7 +19,7 @@
 }
 
 @font-face {
-    font-family: 'Dennis Sans';
+    font-family: 'James Sans';
     src: url('../fonts/NeueMontreal-Regular.otf') format('opentype');
     font-weight: 450;
     font-style: normal;
@@ -27,7 +27,7 @@
 }
 
 @font-face {
-    font-family: 'Dennis Sans';
+    font-family: 'James Sans';
     src: url('../fonts/NeueMontreal-Italic.otf') format('opentype');
     font-weight: 450;
     font-style: italic;
@@ -35,7 +35,7 @@
 }
 
 @font-face {
-    font-family: 'Dennis Sans';
+    font-family: 'James Sans';
     src: url('../fonts/NeueMontreal-Bold.otf') format('opentype');
     font-weight: 800;
     font-style: normal;
@@ -43,7 +43,7 @@
 }
 
 @font-face {
-    font-family: 'Dennis Sans';
+    font-family: 'James Sans';
     src: url('../fonts/NeueMontreal-BoldItalic.otf') format('opentype');
     font-weight: 800;
     font-style: italic;
@@ -117,7 +117,7 @@ li, ul {padding: 0; margin: 0; list-style: none;}
 
 body {
     -webkit-font-smoothing: antialiased;
-    font-family: 'Dennis Sans', sans-serif;
+    font-family: 'James Sans', sans-serif;
     color: var(--color-text);
     line-height: 1.6;
     font-weight: 450;
@@ -160,7 +160,7 @@ h1, h2, h3, h4, h5, h6, p, a, li, ul, ol, span, strong, em  {padding: 0; margin:
 h1:last-child, h2:last-child, h3:last-child, h4:last-child, p:last-child, p.big:last-child, p.small:last-child, a:last-child, strong:last-child  {margin-bottom: 0;}
 
 h1 {
-    font-family: 'Dennis Sans', sans-serif;
+    font-family: 'James Sans', sans-serif;
     font-weight: 450;
     font-style: normal;
     font-size: clamp(3.25em, 7vw, 8em);
@@ -170,7 +170,7 @@ h1 {
 }
   
 h2 {
-    font-family: 'Dennis Sans', sans-serif;
+    font-family: 'James Sans', sans-serif;
     font-weight: 450;
     font-style: normal;
     font-size: calc(clamp(3.25em, 5vw, 4.5em) * .75);
@@ -179,7 +179,7 @@ h2 {
 }
   
 h3 {
-    font-family: 'Dennis Sans', sans-serif;
+    font-family: 'James Sans', sans-serif;
     font-weight: 450;
     font-style: normal;
     font-size: clamp(2.66em, 4.65vw, 5.32em);
@@ -188,7 +188,7 @@ h3 {
 }
   
 h4 {
-    font-family: 'Dennis Sans', sans-serif;
+    font-family: 'James Sans', sans-serif;
     font-weight: 450;
     font-style: normal;
     font-size: clamp(1.55em, 2.3vw, 2.5em);
@@ -197,7 +197,7 @@ h4 {
 }
 
 h5 {
-    font-family: 'Dennis Sans', sans-serif;
+    font-family: 'James Sans', sans-serif;
     font-weight: 450;
     font-style: normal;
     font-size: .6em;
@@ -210,7 +210,7 @@ h5 {
 
 
 p {
-    font-family: 'Dennis Sans', sans-serif;
+    font-family: 'James Sans', sans-serif;
     font-weight: 450;
     font-style: normal;
     color: var(--text);
@@ -379,6 +379,57 @@ video.overlay {
     } 
 }
 
+/* ------------------------- Technologies -------------------------------------------------- */
+
+.tech-stack {
+    display: flex;
+    flex-flow: row wrap;
+    row-gap: 20px;
+    column-gap: 20px;
+    align-items: center;
+}
+
+.tech-logo{
+    height: 75px;
+}
+
+@media (max-width: 1024px) {
+    /* .section.home-intro{
+        padding-bottom: 0;
+    } */
+
+    .section.work-grid.tech-stack{
+        padding-top: 0;
+    }
+}
+
+@media (max-width: 767px) {
+    .tech-logo{
+    width: 15%;
+    }
+
+    .tech-logo.reveal.in-view {
+    margin-top: 0px;
+    }
+
+    .tech-stack {
+    display: flex;
+    flex-flow: row wrap;
+    row-gap: 0px;
+    justify-content: space-evenly;
+}
+}
+
+.reveal.in-view {
+    animation: fade-in 4s;
+    /* animation-timeline: view() */
+}
+
+@keyframes fade-in {
+    from {  opacity: 0;}
+    to {  opacity: 1;}
+}
+
 /* ------------------------- Buttons -------------------------------------------------- */
 
 .btn {
@@ -411,7 +462,7 @@ video.overlay {
 	height: 4.25em;
 	padding: 0;
 	font-size: 1em;
-	overflow: hidden;
+	overflow: clip;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -680,7 +731,7 @@ video.overlay {
 }
 
 .btn-link.btn-left-top .cbd {
-    overflow: hidden;
+    overflow: clip;
     position: relative;
 }
 
@@ -695,7 +746,7 @@ video.overlay {
     transform: translateX(-3.7em) rotate(0.001deg);
 }
 
-.btn-link.btn-left-top .dennis {
+.btn-link.btn-left-top .james {
     transform: translateX(0) rotate(0.001deg);
     position: relative;
     display: inline-block;
@@ -704,12 +755,12 @@ video.overlay {
     transition: var(--animation-primary);
 }
 
-.btn-link.btn-left-top:hover .dennis {
+.btn-link.btn-left-top:hover .james {
     padding-right: 2em;
     transform: translateX(-3.7em) rotate(0.001deg);
 }
 
-.btn-link.btn-left-top .snellenberg {
+.btn-link.btn-left-top .odukoya {
     position: absolute;
     opacity: 1;
     padding-left: .21em;
@@ -729,7 +780,7 @@ video.overlay {
         transform: translateX(0) rotate(0.001deg);
     }
     
-    .btn-link.btn-left-top:hover .dennis {
+    .btn-link.btn-left-top:hover .james {
         padding-right: .2em;
         transform: translateX(0) rotate(0.001deg);
     }
@@ -878,7 +929,7 @@ main .btn-hamburger.active {
 
 .s-icon {
     position: relative;
-    overflow: hidden;
+    overflow: clip;
     width: 1.75em;
     height: 1.75em;
     margin-right: .15em;
@@ -1028,7 +1079,7 @@ main .btn-hamburger.active {
    width: 100%;
 }
 
-.hidden-field,
+.clip-field,
 .website-field {
    position: absolute;
    left: -9999px;
@@ -1045,7 +1096,7 @@ main .btn-hamburger.active {
    top: calc(100% - 120px) !important; 
    transform: translate(0, -50%);
    box-shadow: rgba(0, 0, 0, 0.20) 0px 2px 5px !important;
-   visibility: hidden;
+   visibility: clip;
 }
 
 .form-col {
@@ -1250,13 +1301,13 @@ main .btn-hamburger.active {
    border: 1px solid var(--color-border-light);
    border-radius: 0em;
    box-shadow: 0;
-   overflow: hidden;
+   overflow: clip;
 }
 
 .form .checkbox-button .custom-check:after {
    display: block;
    opacity: 0;
-   visibility: hidden;
+   visibility: clip;
    content: "";
    width: 100%;
    height: 100%;
@@ -1304,14 +1355,14 @@ main .btn-hamburger.active {
    border: 1px solid var(--color-border-light);
    border-radius: 0em;
    box-shadow: 0;
-   overflow: hidden;
+   overflow: clip;
    border-radius: 50%;
 }
 
 .form .checkbox-button .custom-radio:after {
    display: block;
    opacity: 0;
-   visibility: hidden;
+   visibility: clip;
    content: "";
    width: 6px;
    height: 6px;

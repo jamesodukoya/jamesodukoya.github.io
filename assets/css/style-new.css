@@ -1,8 +1,8 @@
-/* ------------------------- Style ® Code by Dennis -------------------------------------------------- */
+/* ------------------------- Style ® Code by James -------------------------------------------------- */
 
 main {
    box-sizing: border-box;
-   overflow: hidden;
+   overflow: clip;
    width: 100vw;
    position: fixed;
    height: 100%;
@@ -54,7 +54,7 @@ main.touch .main-wrap {
    left: 0;
    width: 100%;
    height: 100vh;
-   overflow: hidden;
+   overflow: clip;
    z-index: 900;
    display: none;
 }
@@ -65,7 +65,7 @@ main.touch .main-wrap {
    left: 0;
    width: 100%;
    height: 100vh;
-   overflow: hidden;
+   overflow: clip;
    z-index: 800;
    pointer-events: none;
    background: transparent;
@@ -170,7 +170,7 @@ main.touch .main-wrap {
    left: 0;
    width: 100%;
    height: 100vh;
-   overflow: hidden;
+   overflow: clip;
    z-index: 90;
    background: #FFF;
    visibility: hidden;
@@ -454,7 +454,7 @@ main.touch .main-wrap {
    display: block;
    width: 100%;
    position: relative;
-   overflow: hidden;
+   overflow: clip;
    background: var(--color-dark-dark);
    display: flex;
    align-items: flex-end;
@@ -725,7 +725,7 @@ main.touch .main-wrap {
    display: flex;
    align-items: center;
    background: var(--color-gray);
-   overflow: hidden;
+   overflow: clip;
 }
 
 .home-header .personal-image-wrap {
@@ -1052,7 +1052,7 @@ main.touch .main-wrap {
 .work-grid .work-items h4 {
    position: relative;
    display: block;
-   overflow: hidden;
+   overflow: clip;
    line-height: 1;
    transition: var(--animation-fast);
    transform: translateX(0) rotate(0.001deg);
@@ -1134,7 +1134,7 @@ main.touch .main-wrap {
 
 .small-work-grid .work-items li {
    max-height: 0;
-   overflow: hidden;
+   overflow: clip;
 }
 
 .small-work-grid .work-items li.visible {
@@ -1433,7 +1433,7 @@ main.touch .main-wrap {
    display: block;
    width: 50%;
    position: relative;
-   overflow: hidden;
+   overflow: clip;
    height: 0;
    width: 0;
    transform: translateY(0%) rotate(0.001deg) scale(1);
@@ -1467,7 +1467,7 @@ main.touch .main-wrap {
    align-items: center;
    color: unset;
    text-decoration: unset;
-   overflow: hidden;
+   overflow: clip;
 }
 
 .work-tiles ul li a .flex-col:nth-child(1) {
@@ -1497,7 +1497,7 @@ main.touch .main-wrap {
    width: 100%;
    position: relative;
    background: var(--color-lightgray);
-   overflow: hidden;
+   overflow: clip;
 }
 
 .work-tiles ul li a .tile-image .overlay-image { 
@@ -1519,7 +1519,7 @@ main.touch .main-wrap {
 .work-tiles ul li a h4 {
    position: relative;
    display: block;
-   overflow: hidden;
+   overflow: clip;
    line-height: 1;
    transition: var(--animation-fast);
    transform: translateX(0) rotate(0.001deg);
@@ -1534,7 +1534,7 @@ main.touch .main-wrap {
 
 @media screen and (max-width: 1024px) {
    .work-tiles ul li a h4 {
-      font-size: calc(clamp(1.75em, 2.3vw, 2.5em) * 1.125);
+      /* font-size: calc(clamp(1.75em, 2.3vw, 2.5em) * 1.125); */
    }
 }
 
@@ -1598,7 +1598,7 @@ main.touch .main-wrap {
 
 .grid-fade {
    height: 0;
-   overflow: hidden;
+   overflow: clip;
    transform: translateY(0%) rotate(0.001deg) scale(1);
    transition: opacity .3s ease-in .4s, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
    padding: 0;
@@ -1636,7 +1636,7 @@ main.touch .main-wrap {
    transform: translate(-50%, -52%);
    display: block;
    left: 55%;
-   overflow: hidden;
+   overflow: clip;
    transition: width .4s cubic-bezier(0.36, 0, 0.66, 0);
    left: 0%;
    will-change: transform, width;
@@ -1649,7 +1649,7 @@ main.touch .main-wrap {
 }
 
 .mouse-pos-list-image-bounce {
-   overflow: hidden;
+   overflow: clip;
    transform: scale(1) rotate(.001deg);
    transition: all .5s cubic-bezier(0.65, 0, 0.35, 1);
    will-change: transform;
@@ -1686,7 +1686,7 @@ main.touch .main-wrap {
    position: relative;
    width: 100%;
    display: block;
-   overflow: hidden;
+   overflow: clip;
 }
 
 .mouse-pos-list-image .float-image-wrap .mouse-pos-list-image-inner:before {
@@ -1724,7 +1724,7 @@ main.touch .main-wrap {
    z-index: 26;
    pointer-events: none;
    transform: translate(-50%, -60%);
-   overflow: hidden;
+   overflow: clip;
    display: block;
    transition: width .4s cubic-bezier(0.36, 0, 0.66, 0), height .4s cubic-bezier(0.36, 0, 0.66, 0);
    left: 50.5%;
@@ -1829,7 +1829,7 @@ main.touch .main-wrap {
    position: fixed;
    pointer-events: none;
    transform: scale(0);
-   overflow: hidden;
+   overflow: clip;
    display: block;
    right: var(--gap-padding);
    bottom: var(--gap-padding);
@@ -1887,7 +1887,7 @@ main.touch .main-wrap {
    right: 0;
    transform: translate(-50%, -50%);
    position: absolute;
-   overflow: hidden;
+   overflow: clip;
    background: var(--color-blue);
 }
 
@@ -1915,7 +1915,7 @@ main.touch .main-wrap {
    height: 3em;
    transform: translate(-50%, -50%);
    border-radius: 50%;
-   overflow: hidden;
+   overflow: clip;
    will-change: transform;
 }
 
@@ -1935,7 +1935,7 @@ main.touch .main-wrap {
    border-radius: 50%;
    transform: translate(-50%, -50%) rotate(30deg);
    animation: globe 5.4s cubic-bezier(0.35, 0, 0.65, 1) infinite;
-   overflow: hidden;
+   overflow: clip;
    box-shadow: inset 0px 0px 0px .125em var(--color-white);
 }
 
@@ -2051,7 +2051,7 @@ main.touch .main-wrap {
    width: 100%;
    display: block;
    background: var(--color-lightgray);
-   overflow: hidden;
+   overflow: clip;
    position: relative;
 }
 
@@ -2303,7 +2303,7 @@ main.touch .main-wrap {
    width: 100%;
    display: block;
    background: var(--color-lightgray);
-   overflow: hidden;
+   overflow: clip;
    position: relative;
 }
 
@@ -2664,7 +2664,7 @@ main.touch .main-wrap {
 /* ------------------------- Error - Header -------------------------------------------------- */
 
 .error-header .overlay-video {
-   overflow: hidden;
+   overflow: clip;
 }
 
 .error-header .overlay-dark {
@@ -2755,7 +2755,7 @@ main.touch .main-wrap {
 /* ------------------------- Home - Horizontal Items -------------------------------------------------- */
 
 .horizontal-items {
-   overflow: hidden;
+   overflow: clip;
    padding-top: calc(var(--section-padding) * .75);
    padding-bottom: calc(var(--section-padding) - 2.5vw);
 }
@@ -2940,7 +2940,7 @@ main.touch .main-wrap {
 .case-intro-image .single-image {
    width: 100%;
    background: rgba(100, 100, 100, 0.1);
-   overflow: hidden;
+   overflow: clip;
    position: relative;
 }
 
@@ -3027,7 +3027,7 @@ main.touch .case-intro-image .btn-wrap {
    bottom: 0;
    background: transparent;
    transform: translateX(-50%);
-   overflow: hidden;
+   overflow: clip;
    z-index: 2;
 }
 
@@ -3127,7 +3127,7 @@ main.touch .case-intro-image .btn-wrap {
 
 .block-fullwidth .single-image {
    width: 100%;
-   overflow: hidden;
+   overflow: clip;
    position: relative;
 }
 
@@ -3175,7 +3175,7 @@ main.touch .case-intro-image .btn-wrap {
 .block-device .single-image {
    width: 100%;
    background: rgba(100, 100, 100, 0.1);
-   overflow: hidden;
+   overflow: clip;
    position: absolute;
    top: 50%;
    left: 50%;
@@ -3374,7 +3374,7 @@ main.touch .case-intro-image .btn-wrap {
 
 .block-mobile-devices {
    padding: 0;
-   overflow: hidden;
+   overflow: clip;
 }
 
 .block-mobile-devices .container.block-padding-sides {
@@ -3413,7 +3413,7 @@ main.touch .case-intro-image .btn-wrap {
 .block-mobile-devices .single-image {
    width: 90.2%;
    background: rgba(100, 100, 100, 0.1);
-   overflow: hidden;
+   overflow: clip;
    position: absolute;
    top: 50%;
    left: 50%;
