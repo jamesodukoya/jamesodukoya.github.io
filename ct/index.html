@@ -2,25 +2,132 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    button.active, button.active span {
+        background-color: #B0B4BE;
+        color: #404F6C;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+    }
+  </style>
 </head>
 <body>
   <section>
-    <div class="h-screen bg-cover bg-center relative" style="background-image: url('./assets/lam-hero-image.png');">
-        <nav class="absolute py-4 md:px-40 px-4 flex justify-between w-full items-center">
+    <div class="h-screen bg-cover bg-center relative flex justify-center" style="background-image: url('./assets/lam-hero-image.png');">
+        <nav class="absolute py-4 lg:w-2/3 md:w-4/5 px-4 flex justify-between w-full items-center">
             <a href="./"><img src="./assets/lam-logo.png"></a>
-            <ul class="flex gap-4">
-                <li class="uppercase text-white underline">
-                    <a href="#">01.history</a>
+            <ul class="flex gap-4 text-white">
+                <li class="uppercase underline underline-offset-4">
+                    <a href="#history">01.history</a>
                 </li>
-                <li class="uppercase text-white underline">02.team</li>
+                <li class="uppercase underline underline-offset-4">
+                    <a href="#team">02.team</a>
+                </li>
             </ul>
         </nav>
     </div>
-    <div class="h-screen bg-white">
-
+  </section>
+  <section id="history">
+    <div class="bg-white w-full flex justify-center">
+        <nav class="py-4 lg:w-2/3 md:w-4/5 px-2 flex justify-between w-full items-center">
+            <a href="./"><img src="./assets/lam-footer-logo.png"></a>
+            <ul class="flex gap-4 text-[#455470]">
+                <li class="uppercase underline underline-offset-4">
+                    <a href="#history">01.history</a>
+                </li>
+                <li class="uppercase underline underline-offset-4">
+                    <a href="#team">02.team</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="min-h-screen h-full bg-cover bg-center relative clip" style="background-image: url('./assets/lam-middle-image.png');">
+        <div class="static pt-[40px] flex w-full  justify-center">
+            <div class="lg:w-2/3 w-full px-1 ">
+                <div class="flex flex-col min-h-screen ">
+                    <div>
+                        <img src="./assets/lam-big-01-title.png" height="50">
+                    </div>
+                    <div>
+                        <p class="lg:pl-[90px] px-2">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis quis elit eros. Pellentesque venenatis sed libero et rhoncus. Sed vulputate porttitor leo. Nam accumsan venenatis sodales. Praesent nisl lectus, dapibus eget viverra a, semper nec eros. In elementum placerat turpis, in tincidunt lacus elementum vel.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-center w-full bottom-0 bg-[rgb(57,71,96,.7)] absolute">
+            <div class="lg:w-2/3 w-full px-4 py-4">
+                <swiper-container autoplay-delay="2500" loop="true" init="false">
+                    <swiper-slide class="pb-[30px] justify-center items-center flex">
+                        <img src="./assets/lam-first-carousel-image.png" height="200"></img>
+                    </swiper-slide>
+                    <swiper-slide class="pb-[30px] justify-center items-center flex">
+                        <img src="./assets/lam-second-carousel-image.png"></img>
+                    </swiper-slide>
+                    <swiper-slide class="pb-[30px] justify-center items-center flex">
+                        <img src="./assets/lam-first-carousel-image.png"></img>
+                    </swiper-slide>
+                    <swiper-slide class="pb-[30px] justify-center items-center flex">
+                        <img src="./assets/lam-second-carousel-image.png"></img>
+                    </swiper-slide>
+                    <swiper-slide class="pb-[30px] justify-center items-center flex">
+                        <img src="./assets/lam-first-carousel-image.png"></img>
+                    </swiper-slide>
+                    <swiper-slide class="pb-[30px] justify-center items-center flex">
+                        <img src="./assets/lam-second-carousel-image.png"></img>
+                    </swiper-slide>
+                </swiper-container>
+            </div>
+        </div>        
     </div>
   </section>
+  <section id="team">
+    <div class="bg-white px-2 py-4 justify-center flex">
+        <div class="lg:w-2/3 lg:pl-[50px] w-full flex flex-wrap lg:flex-nowrap items-center gap-6">
+            <img src="./assets/lam-big-02-title.png" >
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis quis elit eros. Pellentesque venenatis sed libero et rhoncus. Sed vulputate porttitor leo. Nam accumsan venenatis sodales. Praesent nisl lectus, dapibus eget viverra a, semper nec eros.
+            </p>
+        </div>
+    </div>
+    <div class="tab flex justify-center" style="background-color: #404F6C; padding-left: 50px;">
+        <div class="lg:w-2/3 w-full px-2 flex justify-start">
+            <button class="tablinks py-2 px-4" onclick="openTab(event, 'Mountain1')" id="default">
+                <span class="uppercase text-[#B0B4BE] font-[800]">mountain 1</span>
+            </button>
+            <button class="tablinks py-2 px-4" onclick="openTab(event, 'Mountain2')">
+                <span class="uppercase text-[#B0B4BE] font-[800]">mountain 2</span>
+            </button>
+        </div>
+    </div>
+    <div id="Mountain1" class="tabcontent min-h-screen bg-cover bg-center relative hidden" style="background-image: url('./assets/lam-tab-1.png');">
+        <div class="flex static justify-center lg:justify-start items-center lg:pl-[350px] pt-[100px]">
+            <img src="./assets/lam-tab-1-schedule.png">
+        </div>
+        <div class="absolute w-full flex justify-center bottom-0 bg-[rgb(57,71,96,.9)]">
+          <footer class=" py-4 lg:w-2/3 md:w-4/5 px-4 flex flex-col lg:flex-row justify-between w-full items-center">
+              <a href="./"><img src="./assets/lam-footer-logo.png"></a>
+              <p class="uppercase text-[#5B6E95] text-bold text-center">copyright 2016. all rights reserved</p>
+          </footer>
+        </div>
+    </div>
+    <div id="Mountain2" class="tabcontent min-h-screen bg-cover bg-center relative hidden" style="background-image: url('./assets/lam-tab-2.png');">
+        <div class="flex static justify-center lg:justify-start items-center lg:pl-[350px] pt-[100px]">
+            <img src="./assets/lam-tab-2-schedule.png">
+        </div>
+        <div class="absolute w-full flex justify-center bottom-0 bg-[rgb(57,71,96,.9)]">
+          <footer class=" py-4 lg:w-2/3 md:w-4/5 px-4 flex flex-col lg:flex-row justify-between w-full items-center">
+              <a href="./"><img src="./assets/lam-footer-logo.png"></a>
+              <p class="uppercase text-[#5B6E95] text-bold text-center">copyright 2016. all rights reserved</p>
+          </footer>
+        </div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-element-bundle.min.js"></script>
+  <script src="./scripts.js"></script>
 </body>
 </html>
