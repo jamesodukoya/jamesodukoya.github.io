@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous VTOL UAV Project Plan</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            /* Light Mode */
+            --bg-color: #F8F9FA;
+            --text-color: #202124;
+            --muted-text-color: #5F6368;
+            --accent-color: #1A73E8;
+            --accent-hover-color: #185ABC;
+            --border-color: #DADCE0;
+            --card-bg-color: #FFFFFF;
+            --card-border-color: #E8EAED;
+            --completed-bg-color: #E6F4EA;
+            --completed-text-color: #1E8E3E;
+            --completed-border-color: #CEEAD6;
+            --header-color: #1A73E8;
+            --arrow-color: #5F6368;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Dark Mode */
+                --bg-color: #1c2128;
+                --text-color: #cdd9e5;
+                --muted-text-color: #768390;
+                --accent-color: #58a6ff;
+                --accent-hover-color: #80b6ff;
+                --border-color: #373e47;
+                --card-bg-color: #22272e;
+                --card-border-color: #373e47;
+                --completed-bg-color: #2d4538;
+                --completed-text-color: #85d3a2;
+                --completed-border-color: #347d39;
+                --header-color: #58a6ff;
+                --arrow-color: #768390;
+            }
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #roadmap-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            font-weight: 700;
+            color: var(--text-color);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--header-color);
+            text-align: center;
+        }
+        
+        h2 {
+           font-size: 1.25rem;
+           font-weight: 600;
+           margin: 0;
+           transition: color 0.3s ease;
+        }
+
+        .phase-block {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--card-border-color);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.04);
+        }
+        
+        .phase-block.completed {
+            background-color: var(--completed-bg-color);
+            border-color: var(--completed-border-color);
+        }
+        
+        .phase-block.completed .phase-header h2 {
+            color: var(--completed-text-color);
+        }
+
+        .phase-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .phase-header .arrow {
+            transition: transform 0.3s ease;
+            font-size: 1.25rem;
+            color: var(--arrow-color);
+        }
+
+        .phase-details {
+            display: none;
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .phase-block.completed .phase-details {
+             border-top: 1px solid var(--completed-border-color);
+        }
+        
+        .sub-section h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 1.25rem;
+        }
+
+        .task-item input[type="checkbox"] {
+            margin-top: 5px;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-color);
+        }
+
+        .task-content {
+            flex-grow: 1;
+        }
+
+        .task-content label {
+            font-weight: 500;
+            display: block;
+        }
+        
+        .task-item.checked .task-content label a,
+        .task-item.checked .task-content label {
+            text-decoration: line-through;
+            color: var(--muted-text-color);
+        }
+
+        .task-content p {
+            font-size: 0.9rem;
+            color: var(--muted-text-color);
+            margin: 0.25rem 0 0 0;
+            padding-left: 0.5rem;
+            border-left: 2px solid var(--border-color);
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: var(--accent-hover-color);
+        }
+        
+        .intro-text {
+            color: var(--muted-text-color);
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .master-progress-container {
+            margin-bottom: 2.5rem;
+        }
+        .master-progress-bar {
+            width: 100%;
+            background-color: var(--card-border-color);
+            border-radius: 8px;
+            height: 16px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .master-progress-fill {
+            height: 100%;
+            width: 0%; /* Initial width */
+            background-color: var(--accent-color);
+            border-radius: 8px;
+            transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        #master-progress-text {
+            display: block;
+            text-align: center;
+            margin-top: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--muted-text-color);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="roadmap-container">
+        <header>
+            <h1>Autonomous VTOL UAV Project Plan</h1>
+            <p class="intro-text">An interactive checklist for designing, building, and testing a high-performance, autonomous Quad-EDF Thrust-Vectoring VTOL UAV. Your progress is saved locally.</p>
+            
+            <div class="master-progress-container">
+                <div class="master-progress-bar">
+                    <div id="master-progress-fill" class="master-progress-fill"></div>
+                </div>
+                <div id="master-progress-text">0% Complete</div>
+            </div>
+        </header>
+        <main id="plan-content"></main>
+    </div>
+
+    <script>
+        const roadmapData = [
+            {
+                phase: 1,
+                title: 'Phase 1: System Architecture & Component Substantiation',
+                sections: [
+                    {
+                        title: '1.1 Integrated Computational Core',
+                        tasks: [
+                            { id: 'p1_core', label: 'Select Integrated Core Components', desc: 'Choose a pre-integrated, NDAA-compliant bundle like the ARKElectron ARKV6X, Jetson PAB Carrier, and NVIDIA Jetson Orin Nano to form the vehicle\'s central nervous system.', link: 'https://arkelectron.com/' },
+                            { id: 'p1_pab', label: 'Understand Pixhawk Autopilot Bus (PAB)', desc: 'Familiarize yourself with the PAB standard, which uses high-density connectors to eliminate complex point-to-point wiring between the flight controller and companion computer carrier.', link: 'https://docs.px4.io/main/en/concept/pixhawk_autopilot_bus.html' }
+                        ]
+                    },
+                    {
+                        title: '1.2 Propulsion System Engineering',
+                        tasks: [
+                            { id: 'p1_edf', label: 'Select EDF & Motor Combination', desc: 'Choose a high-performance 69mm EDF and motor combo (e.g., Schubeler DS-30-AXI HDS + HET 2W-23) capable of producing ~2.0 kgf of thrust per unit on a 5S LiPo setup.', link: 'https://www.schubeler.com/product/ds-30-axi-hds/' },
+                            { id: 'p1_esc', label: 'Select Electronic Speed Controllers (ESCs)', desc: 'Select opto-isolated, 100A ESCs (e.g., Graupner +T 100A) to provide a >25% safety margin over the motor\'s max current draw and prevent electrical noise from interfering with avionics.', link: 'https://www.graupner.com/media/pdf/75/a9/48/S3082_S3083_S3084_Brushless_Control_T_de_en_fr_it.pdf' },
+                            { id: 'p1_servos', label: 'Select Thrust Vectoring Servos', desc: 'Choose high-torque (~55 kg-cm), brushless digital servos with enough power to accurately manipulate the thrust-vectoring nozzles under full load.', link: 'https://www.amazon.com/brushless-servo/s?k=brushless+servo' }
+                        ]
+                    },
+                    {
+                        title: '1.3 Power Distribution Architecture',
+                        tasks: [
+                            { id: 'p1_battery', label: 'Specify Battery Configuration', desc: 'Plan for a 5S2P configuration using four high C-rating LiPo batteries (e.g., 4x CNHL 5200mAh 5S 90C) to handle the ~280A total system current demand.', link: 'https://chinahobbyline.com/' },
+                            { id: 'p1_pdb', label: 'Select High-Current PDB', desc: 'Use a power distribution board rated for well over the system demand, such as the EFT High Current PDB (rated for 480A), to serve as a reliable central power hub.', link: 'https://www.foxtechfpv.com/eft-v3-high-current-power-distribution-board.html' },
+                            { id: 'p1_isolation', label: 'Design Avionics Power Isolation', desc: 'Power avionics through a dedicated, filtered power module (e.g., ARK PAB Power Module) and use a separate, high-current external BEC (>20A) to power the servos, preventing brownouts.', link: 'https://www.dimensionengineering.com/info/bec' }
+                        ]
+                    },
+                    {
+                        title: '1.4 Sensor Suite & Flight Stack',
+                        tasks: [
+                            { id: 'p1_perception', label: 'Select Perception Sensor', desc: 'Choose an integrated, hardware-synchronized stereo depth, IMU, and 4K RGB camera system like the Luxonis OAK-D-Lite, which is critical for robust Visual-SLAM.', link: 'https://docs.luxonis.com/projects/hardware/en/latest/pages/OAK-D-LITE.html' },
+                            { id: 'p1_gnss', label: 'Select RTK GNSS', desc: 'Use a dual-antenna RTK GNSS system (e.g., ArduSimple simpleRTK2B) to get centimeter-level position and a precise heading solution independent of unreliable magnetometers.', link: 'https://www.ardusimple.com/product/simplertk2b-heading/' },
+                            { id: 'p1_airspeed', label: 'Select Digital Airspeed Sensor', desc: 'Integrate a digital airspeed sensor with an I2C interface for superior noise immunity, essential for safe transitions and efficient forward flight.', link: 'https://holybro.com/products/digital-air-speed-sensor-ms4525do' },
+                             { id: 'p1_stack', label: 'Choose PX4 Flight Stack', desc: 'Select the PX4 flight stack for its strong emphasis on companion computer integration and its robust, high-performance bridge to the ROS 2 ecosystem via micro-XRCE-DDS.', link: 'https://px4.io/' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 2,
+                title: 'Phase 2: Propulsion System Modeling & Characterization',
+                sections: [
+                    {
+                        title: '2.1 Theoretical Foundation & Test Apparatus',
+                        tasks: [
+                            { id: 'p2_6dof', label: 'Study 6-DOF UAV Model Theory', desc: 'Review foundational aerospace principles on the six-degree-of-freedom equations of motion that describe any rigid body aircraft. Resource: "Small Unmanned Aircraft: Theory and Practice".', link: 'https://www.wiley.com/en-us/Small+Unmanned+Aircraft%3A+Theory+and+Practice%2C+2nd+Edition-p-9781119253457' },
+                            { id: 'p2_stand', label: 'Design & Build a Rigid Test Stand', desc: 'Construct a multi-axis load cell test stand from rigid materials like thick aluminum profiles. The stand must accurately measure forces and torques without flexing under load.', link: 'https://mhforce.com/load-cell-best-practices/' }
+                        ]
+                    },
+                    {
+                        title: '2.2 Data Acquisition & System Identification',
+                        tasks: [
+                            { id: 'p2_daq', label: 'Implement Data Acquisition (DAQ) System', desc: 'Use a microcontroller and load cell amplifiers (e.g., HX711) to log forces, torques, motor RPM, motor commands, and servo positions with synchronized timestamps.', link: 'https://learn.sparkfun.com/tutorials/load-cell-amplifier-hx711-breakout-hookup-guide/all' },
+                            { id: 'p2_protocol', label: 'Execute Rigorous Test Protocol', desc: 'Perform static characterization by sweeping through all inputs to map steady-state behavior, and dynamic characterization using step inputs to model transient responses.', link: 'https://www.mathworks.com/help/ident/ug/what-is-system-identification.html' },
+                            { id: 'p2_sysid', label: 'Perform System Identification', desc: 'Use the collected dataset and tools like MATLAB\'s System Identification Toolbox to fit the data to a model structure (e.g., ARX model) and derive accurate transfer functions.', link: 'https://www.mathworks.com/products/sysid.html' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 3,
+                title: 'Phase 3: Digital Twin Development & Simulation',
+                sections: [
+                    {
+                        title: '3.1 Development Environment Setup',
+                        tasks: [
+                            { id: 'p3_env', label: 'Establish Dev Environment', desc: 'Set up a development environment on Ubuntu 22.04 LTS. Clone the PX4-Autopilot repository (with --recursive flag) and run the official setup script.', link: 'https://docs.px4.io/main/en/dev_setup/dev_env_linux_ubuntu.html' },
+                            { id: 'p3_ros', label: 'Install ROS 2 Humble Hawksbill', desc: 'Install the ROS 2 Humble distribution, which is the recommended version for integration with the PX4 flight stack for advanced autonomy tasks.', link: 'https://docs.ros.org/en/humble/Installation.html' }
+                        ]
+                    },
+                    {
+                        title: '3.2 Custom Airframe Definition',
+                        tasks: [
+                            { id: 'p3_airframe', label: 'Create New PX4 Airframe Configuration', desc: 'Create a new airframe file in the PX4 source tree to define the custom vehicle, specifying the custom mixer and setting the VTOL type to tailsitter/vectored.', link: 'https://docs.px4.io/main/en/dev_airframes/adding_a_new_frame.html' },
+                            { id: 'p3_mixer', label: 'Design the Custom Mixer File', desc: 'Create a custom mixer file (.mix) that provides an explicit mapping from the flight controller\'s normalized outputs (roll, pitch, yaw, thrust) to the 12 physical actuators (4 motors, 8 servos).', link: 'https://docs.px4.io/main/en/concept/mixing.html' }
+                        ]
+                    },
+                    {
+                        title: '3.3 Simulation & Verification',
+                        tasks: [
+                            { id: 'p3_sitl', label: 'Perform Software-in-the-Loop (SITL) Verification', desc: 'Use SITL with the Gazebo simulator to test the custom mixer logic. Manually command outputs in QGroundControl and observe the simulated actuator responses to verify correctness.', link: 'https://docs.px4.io/main/en/simulation/gazebo.html' },
+                            { id: 'p3_hil', label: 'Perform Hardware-in-the-Loop (HIL) Verification', desc: 'Connect the physical ARKV6X flight controller to the computer and have it fly the virtual vehicle in Gazebo. This validates that the processor can execute all tasks in real-time.', link: 'https://docs.px4.io/main/en/simulation/hitl.html' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 4,
+                title: 'Phase 4: Physical Airframe & Avionics Integration',
+                sections: [
+                    {
+                        title: '4.1 Airframe Construction',
+                        tasks: [
+                            { id: 'p4_fabricate', label: 'Fabricate Carbon Fiber Airframe', desc: 'Use high-quality T700 twill carbon fiber sheets (4mm for arms, 2mm for body) and follow best practices for cutting and sealing edges to prevent delamination.', link: 'https://www.rockwestcomposites.com/blog/working-with-carbon-fiber-101/' },
+                            { id: 'p4_mounts', label: 'Mount Propulsion System Rigidly', desc: 'Mount the four EDF units and thrust-vectoring mechanisms with absolute rigidity using high-grade fasteners and thread-locking compound to handle thrust and vibration loads.', link: 'https://www.loctiteproducts.com/en/products/specialty-products/specialty/loctite_threadlockerblue242.html' },
+                            { id: 'p4_cg', label: 'Implement Center of Gravity (CG) Management', desc: 'Design and include an adjustable battery tray to allow for fine-tuning the CG to align perfectly with the Center of Thrust (CT), which is critical for stable hovering.', link: 'https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/phak/media/07_phak_ch5.pdf' }
+                        ]
+                    },
+                    {
+                        title: '4.2 Avionics and Power System Integration',
+                        tasks: [
+                            { id: 'p4_powerharness', label: 'Construct High-Current Power Harness', desc: 'Use heavy-duty 10 AWG silicone wire and high-quality, anti-spark connectors (e.g., AS150) for all connections between the batteries, PDB, and ESCs.', link: 'https://www.powerstream.com/Wire_Size.htm' },
+                            { id: 'p4_signalharness', label: 'Implement Signal Harness & EMI Mitigation', desc: 'Physically separate high-power DC lines from low-voltage signal lines. Mount the GNSS on a mast away from high-current wires and use twisted-pair or shielded cables for data lines.', link: 'https://www.sae.org/standards/content/as50881/' },
+                            { id: 'p4_bec', label: 'Wire External BEC for Servo Power', desc: 'Connect a high-current external BEC directly to the main PDB to power the servo rail, completely isolating the flight controller\'s power supply from the servos\' fluctuating current draw.', link: 'https://ardupilot.org/copter/docs/common-powering-the-pixhawk.html#powering-servos-and-peripherals' }
+                        ]
+                    },
+                    {
+                        title: '4.3 Flight Controller Mounting',
+                        tasks: [
+                            { id: 'p4_vibration', label: 'Mount Avionics Stack with Vibration Isolation', desc: 'Mount the entire avionics stack on a dedicated anti-vibration plate, decoupled from the main airframe using soft silicone or gel damping balls to ensure IMUs receive clean data.', link: 'https://ardupilot.org/copter/docs/common-vibration-damping.html' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 5,
+                title: 'Phase 5: Ground Verification & Flight Readiness',
+                sections: [
+                    {
+                        title: '5.1 Firmware & Configuration',
+                        tasks: [
+                            { id: 'p5_flash', label: 'Flash PX4 Firmware', desc: 'Connect the ARKV6X flight controller to your PC and use QGroundControl to flash the latest stable version of the PX4 Pro firmware.', link: 'https://docs.qgroundcontrol.com/master/en/getting_started/download_and_install.html' },
+                            { id: 'p5_load_airframe', label: 'Load Custom Airframe Configuration', desc: 'In QGroundControl\'s parameters section, load the custom airframe file created and tested in SITL. Reboot the flight controller for changes to take effect.', link: 'https://docs.px4.io/main/en/config/' }
+                        ]
+                    },
+                    {
+                        title: '5.2 Mandatory Calibrations',
+                        tasks: [
+                            { id: 'p5_sensors', label: 'Calibrate All Sensors', desc: 'Using QGroundControl, precisely calibrate the IMU (Accelerometer & Gyroscope), Compass (Magnetometer), and Level Horizon.', link: 'https://docs.px4.io/main/en/config/sensor_calibration.html' },
+                            { id: 'p5_radio', label: 'Calibrate Radio and Flight Modes', desc: 'Calibrate the RC transmitter to map its stick movements, and assign flight modes like Stabilized, Position, and Return to switches.', link: 'https://docs.px4.io/main/en/config/radio.html' },
+                             { id: 'p5_power', label: 'Calibrate Power Module', desc: 'Calibrate the power module for accurate voltage and current sensing, which is critical for battery level monitoring and failsafes.', link: 'https://docs.px4.io/main/en/config/power.html' }
+                        ]
+                    },
+                    {
+                        title: '5.3 Actuator & Control System Verification (Rotors REMOVED)',
+                        tasks: [
+                            { id: 'p5_esc_cal', label: 'Perform ESC Calibration', desc: 'With rotors removed, perform the PX4 ESC calibration procedure to ensure all four ESCs respond identically to throttle commands.', link: 'https://docs.px4.io/main/en/config_vtol/vtol_escs.html' },
+                            { id: 'p5_actuator_test', label: 'Test Actuators in QGroundControl', desc: 'With rotors removed, manually command each motor and servo individually to verify correct direction and full range of motion. This is the most important ground check.', link: 'https://docs.qgroundcontrol.com/master/en/setup_view/actuators.html' },
+                            { id: 'p5_input_verify', label: 'Verify Integrated Control Inputs', desc: 'With rotors still removed, arm the vehicle in Stabilized mode and provide RC inputs to observe the integrated response of motors and servos, confirming it matches the mixer logic.', link: 'https://docs.px4.io/main/en/concept/flight_modes.html#stabilized' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 6,
+                title: 'Phase 6: Phased Flight Test Execution',
+                sections: [
+                    {
+                        title: '6.1 Safety & Prerequisites',
+                        tasks: [
+                            { id: 'p6_safety', label: 'Establish Safety and Location Prerequisites', desc: 'Conduct all testing in a large, open area clear of obstacles, in compliance with all local regulations (e.g., FAA TRUST). Brief emergency procedures (manual override, RTL) before every flight.', link: 'https://www.faa.gov/uas/recreational_flyers/knowledge_test_updates' }
+                        ]
+                    },
+                    {
+                        title: '6.2 Flight Test Phases',
+                        tasks: [
+                            { id: 'p6_tethered', label: 'Phase 1: Tethered Hover Test', desc: 'Securely tether the UAV to the ground. Slowly increase throttle to become light on the gear and apply small inputs to confirm correct control response under load in a constrained environment.', link: 'https://www.youtube.com/watch?v=Aago5AI-PA8' },
+                            { id: 'p6_untethered', label: 'Phase 2: Untethered Hover & Low-Altitude Maneuvers', desc: 'Perform a vertical takeoff to 2-3 meters. Test Position Hold mode and execute slow, deliberate maneuvers to evaluate untethered hover stability.', link: 'https://docs.px4.io/main/en/getting_started/flight_modes.html#position-mode' },
+                            { id: 'p6_transition', label: 'Phase 3: Transition Testing', desc: 'Climb to a significant altitude (30-50 meters) for a safety margin. Fly forward into the wind, then engage the transition switch. Observe, ready to switch back to hover if any instability occurs.', link: 'https://docs.px4.io/main/en/config_vtol/vtol_quad_tailsitter.html#transition' },
+                            { id: 'p6_forward', label: 'Phase 4: Forward Flight Envelope Expansion', desc: 'Perform gentle turns, climbs, and descents in fixed-wing mode, gradually increasing aggressiveness. Conduct slow-flight tests to determine stall speed.', link: 'https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/airplane_handbook/media/06_afh_ch4.pdf' },
+                            { id: 'p6_mission', label: 'Phase 5: Autonomous Mission Validation', desc: 'Create a simple mission in QGroundControl including autonomous takeoff, transition, waypoint navigation, back-transition, and autonomous landing. Monitor the mission, ready to take manual control.', link: 'https://docs.qgroundcontrol.com/master/en/releases/stable_v4.2_release.html#mission-vtol-landing-pattern' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 7,
+                title: 'Phase 7: Onboard Autonomy Development',
+                sections: [
+                    {
+                        title: '7.1 Jetson System Preparation',
+                        tasks: [
+                            { id: 'p7_jetpack', label: 'Flash NVIDIA JetPack SDK', desc: 'Flash the Jetson module with the latest NVIDIA JetPack SDK, which installs the Linux OS, CUDA-X libraries, and TensorRT for optimized neural network inference.', link: 'https://developer.nvidia.com/embedded/jetpack' },
+                            { id: 'p7_ros2', label: 'Install ROS 2 Humble', desc: 'Install the Robot Operating System (ROS) 2 Humble Hawksbill, which will serve as the primary framework for all autonomy software running on the Jetson.', link: 'https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html' }
+                        ]
+                    },
+                    {
+                        title: '7.2 FC-Companion High-Speed Bridge',
+                        tasks: [
+                            { id: 'p7_bridge', label: 'Establish ROS 2 Bridge (micro-XRCE-DDS)', desc: 'Implement this modern protocol to create a direct, low-latency bridge between PX4\'s internal uORB message bus and the external ROS 2 network, enabling high-speed control loops.', link: 'https://docs.px4.io/main/en/ros/ros2_comm.html' }
+                        ]
+                    },
+                    {
+                        title: '7.3 Sensor Data Streaming Architecture',
+                        tasks: [
+                            { id: 'p7_compression', label: 'Implement Hardware Video Compression', desc: 'Create a ROS 2 node that leverages the Jetson Orin Nano\'s hardware video encoder (NVENC) via GStreamer to compress raw video into an efficient H.264/H.265 format, drastically reducing bandwidth.', link: 'https://developer.nvidia.com/blog/introducing-nvenc-video-codec-sdk-12-0/' },
+                            { id: 'p7_secure', label: 'Implement Secure Data Transport (SROS2)', desc: 'Use SROS2 to provide authentication, access control, and encryption over the standard DDS communication, protecting the data link from eavesdropping or man-in-the-middle attacks.', link: 'https://docs.ros.org/en/humble/Tutorials/Advanced/Security/Introducing-ros2-security.html' }
+                        ]
+                    }
+                ]
+            },
+             {
+                phase: 8,
+                title: 'Phase 8: Advanced Autonomy & Portfolio Projects',
+                sections: [
+                    {
+                        title: '8.1 Core Autonomy Capabilities',
+                        tasks: [
+                            { id: 'p8_vslam', label: 'Project 1: Visual-SLAM in GPS-Denied Environments', desc: 'Implement a robust Visual-SLAM algorithm (e.g., NVIDIA Isaac ROS VSLAM) to achieve stable, real-time position tracking and mapping without relying on GPS.', link: 'https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_visual_slam' },
+                            { id: 'p8_landing', label: 'Project 2: Vision-Based Autonomous Precision Landing', desc: 'Develop a system that enables the drone to autonomously search for, detect (using an AprilTag), and execute a high-precision landing onto a designated landing pad.', link: 'https://github.com/AprilRobotics/apriltag_ros' }
+                        ]
+                    },
+                    {
+                        title: '8.2 AI and Perception Projects',
+                        tasks: [
+                            { id: 'p8_ai', label: 'Project 3: Onboard AI for Real-Time Perception', desc: 'Leverage the Jetson for a real-time "search and identify" mission. Train an object detection model (e.g., YOLOv8) to recognize specific objects and report their GPS coordinates.', link: 'https://github.com/ultralytics/ultralytics' },
+                            { id: 'p8_avoidance', label: 'Project 4: Dynamic Obstacle Avoidance', desc: 'Implement a reactive obstacle avoidance system using the real-time depth data from the OAK-D-Lite, enabling safer navigation in complex environments.', link: 'https://docs.px4.io/main/en/computer_vision/obstacle_avoidance.html' }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const STORAGE_KEY = 'vtolUAVRoadmapProgress_v1';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const planContent = document.getElementById('plan-content');
+            let progress = loadProgress();
+
+            roadmapData.forEach(phaseData => {
+                const phaseBlock = document.createElement('div');
+                phaseBlock.className = 'phase-block';
+                phaseBlock.id = `phase-${phaseData.phase}`;
+
+                const phaseHeader = document.createElement('div');
+                phaseHeader.className = 'phase-header';
+                phaseHeader.innerHTML = `<h2>${phaseData.title}</h2><span class="arrow">▼</span>`;
+                
+                const phaseDetails = document.createElement('div');
+                phaseDetails.className = 'phase-details';
+
+                phaseData.sections.forEach(section => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'sub-section';
+                    
+                    const sectionTitle = document.createElement('h3');
+                    sectionTitle.textContent = section.title;
+                    sectionDiv.appendChild(sectionTitle);
+                    
+                    section.tasks.forEach(task => {
+                        const taskItem = document.createElement('div');
+                        taskItem.className = 'task-item';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = task.id;
+                        checkbox.checked = progress[task.id] || false;
+                        
+                        const taskContent = document.createElement('div');
+                        taskContent.className = 'task-content';
+                        
+                        const label = document.createElement('label');
+                        label.htmlFor = task.id;
+                        if (task.link) {
+                            label.innerHTML = `<a href="${task.link}" target="_blank" rel="noopener noreferrer">${task.label}</a>`;
+                        } else {
+                            label.textContent = task.label;
+                        }
+                        
+                        const desc = document.createElement('p');
+                        desc.innerHTML = task.desc;
+                        
+                        taskContent.appendChild(label);
+                        taskContent.appendChild(desc);
+                        
+                        taskItem.appendChild(checkbox);
+                        taskItem.appendChild(taskContent);
+                        sectionDiv.appendChild(taskItem);
+                        
+                        if (checkbox.checked) {
+                            taskItem.classList.add('checked');
+                        }
+
+                        checkbox.addEventListener('change', (e) => {
+                            progress[task.id] = e.target.checked;
+                            saveProgress(progress);
+                            taskItem.classList.toggle('checked', e.target.checked);
+                            checkPhaseCompletion(phaseBlock, phaseData.sections);
+                            updateMasterProgress();
+                        });
+                    });
+                    phaseDetails.appendChild(sectionDiv);
+                });
+
+
+                phaseHeader.addEventListener('click', () => {
+                    const details = phaseBlock.querySelector('.phase-details');
+                    const arrow = phaseBlock.querySelector('.arrow');
+                    if (details.style.display === 'block') {
+                        details.style.display = 'none';
+                        arrow.style.transform = 'rotate(0deg)';
+                    } else {
+                        details.style.display = 'block';
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                });
+
+                phaseBlock.appendChild(phaseHeader);
+                phaseBlock.appendChild(phaseDetails);
+                planContent.appendChild(phaseBlock);
+                
+                checkPhaseCompletion(phaseBlock, phaseData.sections);
+            });
+            
+            updateMasterProgress();
+        });
+
+        function saveProgress(progress) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+            } catch (e) {
+                console.error("Failed to save progress to localStorage", e);
+            }
+        }
+
+        function loadProgress() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                return saved ? JSON.parse(saved) : {};
+            } catch (e) {
+                console.error("Failed to load progress from localStorage", e);
+                return {};
+            }
+        }
+        
+        function checkPhaseCompletion(phaseBlock, sections) {
+            const progress = loadProgress();
+            const allTasksInPhase = sections.flatMap(sec => sec.tasks);
+            const allComplete = allTasksInPhase.every(task => progress[task.id]);
+            phaseBlock.classList.toggle('completed', allComplete);
+        }
+
+        function updateMasterProgress() {
+            const progress = loadProgress();
+            const totalTasks = roadmapData.flatMap(phase => phase.sections).flatMap(sec => sec.tasks).length;
+            const completedTasks = Object.values(progress).filter(Boolean).length;
+            const percentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+            
+            const progressFill = document.getElementById('master-progress-fill');
+            const progressText = document.getElementById('master-progress-text');
+            
+            if(progressFill && progressText) {
+                progressFill.style.width = `${percentage}%`;
+                progressText.textContent = `${Math.round(percentage)}% Complete`;
+            }
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Axon C2 Implementation Roadmap</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            /* Light Mode */
+            --bg-color: #F8F9FA;
+            --text-color: #202124;
+            --muted-text-color: #5F6368;
+            --accent-color: #1A73E8;
+            --accent-hover-color: #185ABC;
+            --border-color: #DADCE0;
+            --card-bg-color: #FFFFFF;
+            --card-border-color: #E8EAED;
+            --completed-bg-color: #E6F4EA;
+            --completed-text-color: #1E8E3E;
+            --completed-border-color: #CEEAD6;
+            --header-color: #1A73E8;
+            --arrow-color: #5F6368;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Dark Mode */
+                --bg-color: #1c2128;
+                --text-color: #cdd9e5;
+                --muted-text-color: #768390;
+                --accent-color: #58a6ff;
+                --accent-hover-color: #80b6ff;
+                --border-color: #373e47;
+                --card-bg-color: #22272e;
+                --card-border-color: #373e47;
+                --completed-bg-color: #2d4538;
+                --completed-text-color: #85d3a2;
+                --completed-border-color: #347d39;
+                --header-color: #58a6ff;
+                --arrow-color: #768390;
+            }
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 2rem;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #roadmap-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            font-weight: 700;
+            color: var(--text-color);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--header-color);
+            text-align: center;
+        }
+        
+        h2 {
+           font-size: 1.25rem;
+           font-weight: 600;
+           margin: 0;
+           transition: color 0.3s ease;
+        }
+
+        .phase-block {
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--card-border-color);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.04);
+        }
+        
+        .phase-block.completed {
+            background-color: var(--completed-bg-color);
+            border-color: var(--completed-border-color);
+        }
+        
+        .phase-block.completed .phase-header h2 {
+            color: var(--completed-text-color);
+        }
+
+        .phase-header {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .phase-header .arrow {
+            transition: transform 0.3s ease;
+            font-size: 1.25rem;
+            color: var(--arrow-color);
+        }
+
+        .phase-details {
+            display: none;
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .phase-block.completed .phase-details {
+             border-top: 1px solid var(--completed-border-color);
+        }
+        
+        .sub-section h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            margin-top: 1.25rem;
+        }
+
+        .task-item input[type="checkbox"] {
+            margin-top: 5px;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-color);
+        }
+
+        .task-content {
+            flex-grow: 1;
+        }
+
+        .task-content label {
+            font-weight: 500;
+            display: block;
+        }
+        
+        .task-item.checked .task-content label a,
+        .task-item.checked .task-content label {
+            text-decoration: line-through;
+            color: var(--muted-text-color);
+        }
+
+        .task-content p {
+            font-size: 0.9rem;
+            color: var(--muted-text-color);
+            margin: 0.25rem 0 0 0;
+            padding-left: 0.5rem;
+            border-left: 2px solid var(--border-color);
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: var(--accent-hover-color);
+        }
+        
+        .intro-text {
+            color: var(--muted-text-color);
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .master-progress-container {
+            margin-bottom: 2.5rem;
+        }
+        .master-progress-bar {
+            width: 100%;
+            background-color: var(--card-border-color);
+            border-radius: 8px;
+            height: 16px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .master-progress-fill {
+            height: 100%;
+            width: 0%; /* Initial width */
+            background-color: var(--accent-color);
+            border-radius: 8px;
+            transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        #master-progress-text {
+            display: block;
+            text-align: center;
+            margin-top: 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--muted-text-color);
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="roadmap-container">
+        <header>
+            <h1>Axon C2 Platform Roadmap</h1>
+            <p class="intro-text">An interactive checklist for architecting a full-stack, low-latency Command and Control platform. Your progress is saved locally in your browser.</p>
+            
+            <div class="master-progress-container">
+                <div class="master-progress-bar">
+                    <div id="master-progress-fill" class="master-progress-fill"></div>
+                </div>
+                <div id="master-progress-text">0% Complete</div>
+            </div>
+        </header>
+        <main id="plan-content"></main>
+    </div>
+
+    <script>
+        const roadmapData = [
+            {
+                phase: 1,
+                title: 'Phase 1: Foundation & Simulation Environment',
+                sections: [
+                    {
+                        title: '1.1 The Professional C++ Toolchain',
+                        tasks: [
+                            { id: 'p1_compiler', label: 'Setup C++20 Compliant Compiler', desc: 'A C++20 compliant compiler is mandatory to leverage features like coroutines, which are central to the asynchronous networking design. Resource: "C++20 - The Complete Guide" by Nicolai M. Josuttis. Target: Chapters 2, 10, 16 on concepts, coroutines, and concurrency.', link: 'https://www.cppstd20.com/' },
+                            { id: 'p1_cmake', label: 'Configure Build System with CMake', desc: 'Its ubiquity in the C++ ecosystem ensures cross-platform compatibility and simplifies the process of locating and linking dependencies.', link: 'https://cmake.org/documentation/' },
+                            { id: 'p1_vcpkg', label: 'Implement Package Management with vcpkg', desc: 'It automates the process of acquiring, building, and integrating third-party libraries, eliminating the tedious and error-prone process of manual configuration.', link: 'https://vcpkg.io/' },
+                            { id: 'p1_libs', label: 'Install Core Libraries', desc: 'The initial vcpkg manifest will include essential libraries such as Boost (for Asio and Beast), redis-plus-plus, and SQLiteCpp. This approach professionalizes the project setup from day one.', link: 'https://github.com/microsoft/vcpkg' }
+                        ]
+                    },
+                    {
+                        title: '1.2 The Digital Twin: MAVLink Simulation',
+                        tasks: [
+                            { id: 'p1_sitl', label: 'Set up PX4 SITL with Gazebo', desc: 'The PX4 SITL environment provides a realistic source of MAVLink data over standard network protocols (port 14540) without requiring any physical hardware. Resource: PX4 Developer Guide. Objective: Install and run the Gazebo simulation.', link: 'https://docs.px4.io/main/en/simulation/gazebo.html' },
+                            { id: 'p1_wireshark', label: 'Verify Data Stream with Wireshark', desc: 'Use Wireshark with a custom MAVLink Lua dissector to confirm the simulation environment is correctly configured. Verifying messages like ATTITUDE and GLOBAL_POSITION_INT provides a definitive "definition of done". Resource: MAVLink Guide for Wireshark.', link: 'https://mavlink.io/en/guide/wireshark.html' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 2,
+                title: 'Phase 2: High-Performance C++ Core Engineering',
+                sections: [
+                    {
+                        title: '2.1 Asynchronous I/O Engine',
+                        tasks: [
+                            { id: 'p2_asio', label: 'Build Networking Layer with Boost.Asio', desc: 'Build with the premier C++ library for high-performance I/O, which provides an abstraction over efficient OS mechanisms like epoll. Resource: Official Boost.Asio Tutorial. Objective: Master the io_context event loop and proactor pattern.', link: 'https://think-async.com/Asio/asio-1.30.2/doc/asio/tutorial.html' },
+                            { id: 'p2_coroutines', label: 'Use C++20 Coroutines for Asynchronous Code', desc: 'This modern language feature allows asynchronous code to be written in a clean, sequential style, using co_await to avoid "callback hell". Resource: "C++20 - The Complete Guide". Target: Chapter 10.', link: 'https://en.cppreference.com/w/cpp/language/coroutines' }
+                        ]
+                    },
+                    {
+                        title: '2.2 Deterministic Threading Architecture',
+                        tasks: [
+                            { id: 'p2_threadpool', label: 'Implement I/O & Worker Thread Pools', desc: 'Create separate I/O and worker thread pools to prevent different types of work from interfering with one another. Resource: "C++ Concurrency in Action, 2nd Ed.". Target: Chapter 8 (Designing Concurrent Code).', link: 'https://en.wikipedia.org/wiki/Thread_pool' },
+                            { id: 'p2_cpu_affinity', label: 'Employ CPU Affinity', desc: 'This advanced technique involves "pinning" each thread to a specific CPU core to guarantee the lowest possible data ingestion latency by preventing OS preemption and improving cache coherency.', link: 'https://man7.org/linux/man-pages/man2/sched_setaffinity.2.html' }
+                        ]
+                    },
+                    {
+                        title: '2.3 Lock-Free MPMC Queue',
+                        tasks: [
+                            { id: 'p2_mpmc_lib', label: 'Stage 1: Integrate Third-Party MPMC Queue', desc: 'Adopt a pragmatic, risk-mitigating strategy by using a battle-tested library first. This allows the rest of the system\'s architecture to be built and validated on a stable foundation.', link: 'https://github.com/rigtorp/MPMCQueue' },
+                            { id: 'p2_mpmc_custom', label: 'Stage 2: Implement Custom Lock-Free MPMC Queue', desc: 'The implementation relies on std::atomic variables and C++ memory ordering (acquire/release). Resource: "C++ Concurrency in Action, 2nd Ed.". Target: Chapter 7 (Lock-free Data Structures).', link: 'https://www.youtube.com/watch?v=bjz_bMNNWRK' }
+                        ]
+                    },
+                    {
+                        title: '2.4 Custom Memory Pool Allocator',
+                        tasks: [
+                             { id: 'p2_mempool', label: 'Implement a Fixed-Block Memory Pool', desc: 'At startup, pre-allocate a large, contiguous block of memory to serve fixed-size chunks in O(1) time, completely bypassing the OS heap manager. Resource: "Custom Memory Allocators" by RasterGrid.', link: 'https://www.rastergrid.com/blog/sw-eng/2021/03/custom-memory-allocators/' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 3,
+                title: 'Phase 3: Data Processing & Persistence Pipelines',
+                sections: [
+                    {
+                        title: '3.1 MAVLink Deserialization',
+                        tasks: [
+                            { id: 'p3_mavlink', label: 'Decode MAVLink Telemetry', desc: 'Worker threads parse the raw UDP byte stream into strongly-typed C++ structures (e.g., mavlink_attitude_t). Resource: MAVLink Developer Guide. Objective: Understand the protocol structure, message types, and serialization.', link: 'https://mavlink.io/en/' }
+                        ]
+                    },
+                    {
+                        title: '3.2 High-Frequency State Caching',
+                        tasks: [
+                            { id: 'p3_redis', label: 'Use Redis as Real-Time State Cache', desc: 'Redis is an extremely fast, in-memory key-value store. The data model will use a clear keying scheme (e.g., UAV:01:POSITION) to represent asset state. Resource: Official Redis Documentation.', link: 'https://redis.io/docs/latest/' },
+                            { id: 'p3_redis_client', label: 'Integrate redis-plus-plus Client', desc: 'This modern C++ client is recommended for its intuitive API. Worker threads will execute Redis HSET or SET commands to update values as new telemetry arrives.', link: 'https://github.com/sewenew/redis-plus-plus' }
+                        ]
+                    },
+                    {
+                        title: '3.3 Transactional Event Logging',
+                        tasks: [
+                            { id: 'p3_sqlite', label: 'Use SQLite for Persistent Logging', desc: 'SQLite is a serverless, transactional SQL database engine that requires no separate server process and provides full ACID-compliant transactions for reliability.', link: 'https://www.sqlite.org/index.html' },
+                            { id: 'p3_sqlite_client', label: 'Integrate SQLiteCpp Wrapper', desc: 'A clean, modern C++ wrapper that simplifies database interactions. When a worker generates a critical event, it will begin a SQLite::Transaction to ensure atomicity and durability. Resource: SQLiteCpp GitHub Repository.', link: 'https://github.com/SRombauts/SQLiteCpp' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 4,
+                title: 'Phase 4: The AI Perception & Fusion Engine',
+                sections: [
+                    {
+                        title: '4.1 GPU Video Pipeline',
+                        tasks: [
+                            { id: 'p4_gpu_decode', label: 'Implement Hardware-Accelerated Decoding', desc: 'Use FFmpeg with NVIDIA\'s NVDEC engine for a "zero-copy" approach to decode H.265 video streams directly into a CUDA buffer in GPU memory. Resource: NVIDIA FFmpeg Transcoding Guide.', link: 'https://developer.nvidia.com/blog/nvidia-ffmpeg-transcoding-guide/' }
+                        ]
+                    },
+                    {
+                        title: '4.2 High-Throughput Inference',
+                        tasks: [
+                            { id: 'p4_tensorrt_build', label: 'Offline: Build TensorRT Engine', desc: 'Use the TensorRT IBuilder interface to parse an ONNX model. TensorRT performs optimizations like layer fusion and precision calibration (FP16/INT8). Resource: NVIDIA Developer Blog "Speeding Up Deep Learning Inference".', link: 'https://developer.nvidia.com/blog/speeding-up-deep-learning-inference-using-tensorflow-onnx-and-tensorrt/' },
+                            { id: 'p4_tensorrt_infer', label: 'Online: Implement Inference Loop', desc: 'Load the serialized .engine file, create an IExecutionContext, and execute inference asynchronously by calling enqueueV2() on a CUDA stream. Resource: NVIDIA TensorRT C++ API Documentation.', link: 'https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/c-api-docs.html' }
+                        ]
+                    },
+                    {
+                        title: '4.3 "Physical Arbitrage" Event Generator',
+                        tasks: [
+                            { id: 'p4_fusion', label: 'Fuse Perception and Telemetry Data', desc: 'When the TensorRT pipeline detects an event, immediately query the Redis state cache to retrieve the UAV\'s high-precision RTK GNSS position, altitude, and attitude at the exact timestamp of the video frame.' },
+                            { id: 'p4_log_event', label: 'Log Fused Event to SQLite', desc: 'The high-value fused event object (containing event type, confidence, snapshot, and geo-location) is passed to the SQLite pipeline for persistent logging and made available to the web API for operator notification.' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 5,
+                title: 'Phase 5: The Web API Layer',
+                sections: [
+                    {
+                        title: '5.1 Telemetry Streaming',
+                        tasks: [
+                            { id: 'p5_websockets', label: 'Implement WebSocket Server with Boost.Beast', desc: 'Boost.Beast works seamlessly with the existing Boost.Asio io_context. A dedicated task will query Redis at a regular interval (e.g., 20 Hz) and broadcast JSON payloads. Resource: Boost.Beast Documentation & Examples.', link: 'https://github.com/boostorg/beast' }
+                        ]
+                    },
+                    {
+                        title: '5.2 Low-Latency Video Streaming',
+                        tasks: [
+                            { id: 'p5_webrtc', label: 'Integrate WebRTC with libdatachannel', desc: 'libdatachannel is a modern, lightweight C++ WebRTC library. Video frames are re-encoded and streamed over SRTP (UDP) for minimal latency. Resource: libdatachannel GitHub Repository.', link: 'https://github.com/paullouisageneau/libdatachannel' },
+                            { id: 'p5_signaling', label: 'Implement WebRTC Signaling', desc: 'The browser client creates an SDP "offer" and sends it via WebSocket. The C++ server sends back an "answer" to complete the peer connection negotiation. Resource: Ably Blog "WebRTC vs. WebSocket".', link: 'https://ably.com/topic/webrtc-vs-websocket' }
+                        ]
+                    },
+                    {
+                        title: '5.3 Command and Control API',
+                        tasks: [
+                            { id: 'p5_rest', label: 'Implement RESTful Interface with Boost.Beast', desc: 'A simple RESTful HTTP interface is suitable for discrete, client-initiated actions. Boost.Beast\'s HTTP components can run on the same io_context.', link: 'https://www.boost.org/doc/libs/master/libs/beast/doc/html/beast/examples.html#beast.examples.http' },
+                            { id: 'p5_endpoints', label: 'Create API Endpoints', desc: 'Expose POST /api/command for sending commands (e.g., ARM_VEHICLE) and GET /api/events for querying the SQLite database to fetch the persistent event log.' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 6,
+                title: 'Phase 6: Frontend - Online Mission Control',
+                sections: [
+                    {
+                        title: '6.1 Frontend Stack Setup',
+                        tasks: [
+                            { id: 'p6_stack', label: 'Initialize Project with React, TypeScript, and Vite', desc: 'React is the industry leader for UIs, TypeScript adds static typing, and Vite provides a fast development environment. Resource: Official React & TypeScript Documentation.', link: 'https://react.dev/learn' }
+                        ]
+                    },
+                    {
+                        title: '6.2 Real-Time Telemetry Visualization',
+                        tasks: [
+                            { id: 'p6_plotly', label: 'Visualize Telemetry with Plotly.js', desc: 'Use the Plotly.extendTraces function to efficiently append new data points without a full redraw, which is critical for smooth visualization. Resource: Plotly.js React Documentation.', link: 'https://plotly.com/javascript/react/' }
+                        ]
+                    },
+                    {
+                        title: '6.3 3D Situational Display',
+                        tasks: [
+                            { id: 'p6_threejs', label: 'Build 3D Display with Three.js & react-three-fiber', desc: 'Three.js is a lightweight rendering library. react-three-fiber allows for declarative 3D scenes. Update the 3D model\'s position and quaternion on every frame. Resource: React Three Fiber (R3F) Documentation.', link: 'https://docs.pmnd.rs/react-three-fiber/getting-started/introduction' }
+                        ]
+                    },
+                    {
+                        title: '6.4 Live Video Feed Integration',
+                        tasks: [
+                            { id: 'p6_video', label: 'Integrate WebRTC Video Stream', desc: 'Create an RTCPeerConnection and implement the ontrack event handler. This handler attaches the incoming MediaStream to an HTML5 <video> element. Resource: MDN Web Docs: WebRTC API.', link: 'https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API' }
+                        ]
+                    },
+                    {
+                        title: '6.5 Interactive Controls',
+                        tasks: [
+                            { id: 'p6_controls', label: 'Build Mission Control Panel', desc: 'Create UI components with buttons that use the browser\'s fetch API to POST commands to the C++ server\'s /api/command endpoint.', link: 'https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API' },
+                            { id: 'p6_log', label: 'Build Alerts & Events Log', desc: 'Create a UI component to fetch and display the historical event log from the /api/events endpoint in a sortable table.', link: 'https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API' }
+                        ]
+                    }
+                ]
+            },
+            {
+                phase: 7,
+                title: 'Phase 7: Production Hardening & Operational Excellence',
+                sections: [
+                    {
+                        title: '7.1 Application Security (AppSec)',
+                        tasks: [
+                            { id: 'p7_auth', label: 'Implement Authentication & Authorization', desc: 'Secure endpoints using a standard mechanism like JSON Web Tokens (JWTs) or OAuth 2.0 to ensure only authenticated and authorized users can perform actions.', link: 'https://jwt.io/introduction' },
+                            { id: 'p7_ratelimit', label: 'Define & Enforce API Rate Limiting', desc: 'Protect backend services from abuse and ensure availability by implementing rate limiting on all public-facing API endpoints (REST, WebSocket).', link: 'https://en.wikipedia.org/wiki/Rate_limiting' },
+                            { id: 'p7_securecode', label: 'Establish Secure Coding Guidelines & Static Analysis', desc: 'Adopt secure coding practices for both C++ (e.g., OWASP Top 10 for C++) and TypeScript. Integrate static analysis tools (SAST) into the CI/CD pipeline to catch vulnerabilities early.', link: 'https://owasp.org/www-community/attacks/' }
+                        ]
+                    },
+                    {
+                        title: '7.2 System Resilience & Observability',
+                        tasks: [
+                            { id: 'p7_errorhandling', label: 'Implement Robust Error Handling & Retry Logic', desc: 'Develop strategies for handling network disconnects, service failures, and invalid data. Implement graceful degradation and automatic retry mechanisms where appropriate.', link: 'https://learn.microsoft.com/en-us/azure/architecture/patterns/retry' },
+                            { id: 'p7_monitoring', label: 'Setup Monitoring & Alerting Stack', desc: 'Integrate tools like Prometheus for metrics collection and Grafana for dashboarding. Monitor key performance indicators (KPIs) like latency, throughput, and error rates to ensure system health.', link: 'https://prometheus.io/docs/introduction/overview/' },
+                            { id: 'p7_tracing', label: 'Integrate Distributed Tracing', desc: 'Use a framework like OpenTelemetry to trace requests as they travel from the frontend through the C++ backend services. This is invaluable for pinpointing performance bottlenecks in a complex system.', link: 'https://opentelemetry.io/' }
+                        ]
+                    },
+                    {
+                        title: '7.3 API Governance & Frontend Optimization',
+                        tasks: [
+                            { id: 'p7_schema', label: 'Define Formal API Schema', desc: 'Use OpenAPI (Swagger) for the REST API and JSON Schema for WebSocket messages. This provides a single source of truth for the data contract between frontend and backend.', link: 'https://swagger.io/specification/' },
+                            { id: 'p7_codesplit', label: 'Implement Frontend Code Splitting', desc: 'Use Vite and React features (e.g., React.lazy) to split the application bundle. This ensures users only download the code they need for the initial view, significantly improving initial load times.', link: 'https://react.dev/reference/react/lazy' },
+                            { id: 'p7_assets', label: 'Optimize & Serve Static Assets Efficiently', desc: 'Compress images, minify CSS/JS, and configure a Content Delivery Network (CDN) to serve static assets. This reduces latency by caching content closer to the user.', link: 'https://developer.mozilla.org/en-US/docs/Web/Performance/Fundamentals' }
+                        ]
+                    },
+                    {
+                        title: '7.4 Containerization & CI/CD',
+                        tasks: [
+                            { id: 'p7_dockerfile', label: 'Create a Multi-Stage Dockerfile', desc: 'Develop a multi-stage Dockerfile. The "build" stage will use a C++ build environment to compile the application. The final stage will copy the compiled binary into a minimal runtime image for a smaller footprint and improved security.', link: 'https://docs.docker.com/build/building/multi-stage/' },
+                            { id: 'p7_cicd', label: 'Setup Basic CI/CD Pipeline', desc: 'Create a simple continuous integration pipeline (e.g., using GitHub Actions) that automatically builds and tests the application inside the Docker container on every push to the main branch.', link: 'https://docs.github.com/en/actions' }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const STORAGE_KEY = 'auraC2RoadmapProgress_v2'; // Incremented key
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const planContent = document.getElementById('plan-content');
+            let progress = loadProgress();
+
+            roadmapData.forEach(phaseData => {
+                const phaseBlock = document.createElement('div');
+                phaseBlock.className = 'phase-block';
+                phaseBlock.id = `phase-${phaseData.phase}`;
+
+                const phaseHeader = document.createElement('div');
+                phaseHeader.className = 'phase-header';
+                phaseHeader.innerHTML = `<h2>${phaseData.title}</h2><span class="arrow">▼</span>`;
+                
+                const phaseDetails = document.createElement('div');
+                phaseDetails.className = 'phase-details';
+
+                phaseData.sections.forEach(section => {
+                    const sectionDiv = document.createElement('div');
+                    sectionDiv.className = 'sub-section';
+                    
+                    const sectionTitle = document.createElement('h3');
+                    sectionTitle.textContent = section.title;
+                    sectionDiv.appendChild(sectionTitle);
+                    
+                    section.tasks.forEach(task => {
+                        const taskItem = document.createElement('div');
+                        taskItem.className = 'task-item';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = task.id;
+                        checkbox.checked = progress[task.id] || false;
+                        
+                        const taskContent = document.createElement('div');
+                        taskContent.className = 'task-content';
+                        
+                        const label = document.createElement('label');
+                        label.htmlFor = task.id;
+                        if (task.link) {
+                            label.innerHTML = `<a href="${task.link}" target="_blank" rel="noopener noreferrer">${task.label}</a>`;
+                        } else {
+                            label.textContent = task.label;
+                        }
+                        
+                        const desc = document.createElement('p');
+                        desc.textContent = task.desc;
+                        
+                        taskContent.appendChild(label);
+                        taskContent.appendChild(desc);
+                        
+                        taskItem.appendChild(checkbox);
+                        taskItem.appendChild(taskContent);
+                        sectionDiv.appendChild(taskItem);
+                        
+                        if (checkbox.checked) {
+                            taskItem.classList.add('checked');
+                        }
+
+                        checkbox.addEventListener('change', (e) => {
+                            progress[task.id] = e.target.checked;
+                            saveProgress(progress);
+                            taskItem.classList.toggle('checked', e.target.checked);
+                            checkPhaseCompletion(phaseBlock, phaseData.sections);
+                            updateMasterProgress();
+                        });
+                    });
+                    phaseDetails.appendChild(sectionDiv);
+                });
+
+
+                phaseHeader.addEventListener('click', () => {
+                    const details = phaseBlock.querySelector('.phase-details');
+                    const arrow = phaseBlock.querySelector('.arrow');
+                    if (details.style.display === 'block') {
+                        details.style.display = 'none';
+                        arrow.style.transform = 'rotate(0deg)';
+                    } else {
+                        details.style.display = 'block';
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                });
+
+                phaseBlock.appendChild(phaseHeader);
+                phaseBlock.appendChild(phaseDetails);
+                planContent.appendChild(phaseBlock);
+                
+                checkPhaseCompletion(phaseBlock, phaseData.sections);
+            });
+            
+            updateMasterProgress();
+        });
+
+        function saveProgress(progress) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : {};
+        }
+        
+        function checkPhaseCompletion(phaseBlock, sections) {
+            const progress = loadProgress();
+            const allTasksInPhase = sections.flatMap(sec => sec.tasks);
+            const allComplete = allTasksInPhase.every(task => progress[task.id]);
+            phaseBlock.classList.toggle('completed', allComplete);
+        }
+
+        function updateMasterProgress() {
+            const progress = loadProgress();
+            const totalTasks = roadmapData.flatMap(phase => phase.sections).flatMap(sec => sec.tasks).length;
+            const completedTasks = Object.values(progress).filter(Boolean).length;
+            const percentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+            
+            const progressFill = document.getElementById('master-progress-fill');
+            const progressText = document.getElementById('master-progress-text');
+            
+            if(progressFill && progressText) {
+                progressFill.style.width = `${percentage}%`;
+                progressText.textContent = `${Math.round(percentage)}% Complete`;
+            }
+        }
+
+    </script>
+</body>
+</html>
+
