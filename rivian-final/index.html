@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rivian 4-Day Interview Plan</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Light mode tokens */
+        :root {
+            --bg-page: #f5f5f3;
+            --bg-card: #ffffff;
+            --bg-code: #f1efe8;
+            --text-main: #1a1a18;
+            --text-muted: #5f5e5a;
+            --border: rgba(0, 0, 0, 0.10);
+            --border-row: rgba(0, 0, 0, 0.08);
+            --divider: rgba(0, 0, 0, 0.08);
+        }
+
+        /* Dark mode tokens */
+        body.dark {
+            --bg-page: #1a1a18;
+            --bg-card: #242422;
+            --bg-code: #2e2e2b;
+            --text-main: #e8e6df;
+            --text-muted: #888780;
+            --border: rgba(255, 255, 255, 0.10);
+            --border-row: rgba(255, 255, 255, 0.07);
+            --divider: rgba(255, 255, 255, 0.07);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg-page);
+            color: var(--text-main);
+            padding: 1.5rem;
+            font-size: 16px;
+            line-height: 1.6;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        /* Header row with toggle */
+        .top-bar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 0.25rem;
+        }
+
+        h1 {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        #dm-btn {
+            cursor: pointer;
+            background: var(--bg-card);
+            border: 0.5px solid var(--border);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        #dm-btn:hover {
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .legend {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+            align-items: center;
+        }
+
+        .leg-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .plan {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 0.5px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: background 0.2s;
+        }
+
+        .card-head {
+            padding: 9px 14px 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 0.5px solid var(--border);
+        }
+
+        .day-badge {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 3px 9px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .hd-text .title {
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .hd-text .sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .card-body {
+            padding: 10px 14px 12px;
+        }
+
+        .blk {
+            margin-bottom: 9px;
+        }
+
+        .blk:last-child {
+            margin-bottom: 0;
+        }
+
+        .blk-label {
+            font-size: 10.5px;
+            font-weight: 500;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 6px;
+            padding: 2.5px 0;
+            border-bottom: 0.5px solid var(--border-row);
+        }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+        .row-text {
+            font-size: 12.5px;
+            line-height: 1.45;
+            flex: 1;
+            color: var(--text-main);
+        }
+
+        .row-text.bold {
+            font-weight: 500;
+        }
+
+        .row-text code {
+            font-family: "SF Mono", "Fira Code", monospace;
+            font-size: 11px;
+            background: var(--bg-code);
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: var(--text-main);
+        }
+
+        .links {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .badge-link {
+            font-size: 10px;
+            font-weight: 500;
+            padding: 2px 6px;
+            border-radius: 10px;
+            text-decoration: none;
+            white-space: nowrap;
+            display: inline-block;
+            line-height: 1.4;
+        }
+
+        .badge-link:hover {
+            opacity: 0.8;
+        }
+
+        .eil {
+            background: #E6F1FB;
+            color: #185FA5;
+        }
+
+        .lc {
+            background: #EAF3DE;
+            color: #3B6D11;
+        }
+
+        .doc {
+            background: #FAEEDA;
+            color: #854F0B;
+        }
+
+        .art {
+            background: #E1F5EE;
+            color: #0F6E56;
+        }
+
+        .ext {
+            background: #EEEDFE;
+            color: #534AB7;
+        }
+
+        .hack {
+            background: #FCEBEB;
+            color: #A32D2D;
+        }
+
+        /* Dark mode: slightly mute badge backgrounds so they don't glare */
+        body.dark .eil {
+            background: #0C447C;
+            color: #B5D4F4;
+        }
+
+        body.dark .lc {
+            background: #27500A;
+            color: #C0DD97;
+        }
+
+        body.dark .doc {
+            background: #633806;
+            color: #FAC775;
+        }
+
+        body.dark .art {
+            background: #085041;
+            color: #9FE1CB;
+        }
+
+        body.dark .ext {
+            background: #3C3489;
+            color: #CECBF6;
+        }
+
+        body.dark .hack {
+            background: #791F1F;
+            color: #F7C1C1;
+        }
+
+        .alert {
+            border-radius: 0 8px 8px 0;
+            padding: 6px 10px;
+            margin: 8px 0 0;
+            font-size: 11.5px;
+        }
+
+        .divider {
+            height: 0.5px;
+            background: var(--divider);
+            margin: 7px 0;
+        }
+
+        .checklist {
+            background: var(--bg-card);
+            border: 0.5px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: background 0.2s;
+        }
+
+        .checklist h2 {
+            font-size: 15px;
+            font-weight: 500;
+            padding: 12px 16px 10px;
+            border-bottom: 0.5px solid var(--border);
+            color: var(--text-main);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            border-bottom: 0.5px solid var(--border);
+            padding: 7px 16px 6px;
+            text-align: left;
+        }
+
+        td {
+            padding: 6px 16px;
+            border-bottom: 0.5px solid var(--border-row);
+            vertical-align: middle;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .pill {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 500;
+            padding: 2px 7px;
+            border-radius: 10px;
+        }
+
+        .pill-red {
+            background: #FCEBEB;
+            color: #A32D2D;
+        }
+
+        .pill-amber {
+            background: #FAEEDA;
+            color: #854F0B;
+        }
+
+        .pill-green {
+            background: #EAF3DE;
+            color: #3B6D11;
+        }
+
+        body.dark .pill-red {
+            background: #791F1F;
+            color: #F7C1C1;
+        }
+
+        body.dark .pill-amber {
+            background: #633806;
+            color: #FAC775;
+        }
+
+        body.dark .pill-green {
+            background: #27500A;
+            color: #C0DD97;
+        }
+
+        @media (max-width: 640px) {
+            .plan {
+                grid-template-columns: 1fr;
+            }
+
+            body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="top-bar">
+        <h1>Rivian — 4-Day Interview Action Plan</h1>
+        <button id="dm-btn" onclick="toggleDark()"><span id="dm-icon">☾</span> <span id="dm-label">Dark</span></button>
+    </div>
+    <p class="subtitle">Software Engineering Intern, Mechanisms (Body Controls) · Prepared for James</p>
+
+    <div class="legend">
+        <span class="leg-label">Resource key:</span>
+        <a class="badge-link eil" href="https://embeddedinterviewlab.com" target="_blank">EIL</a>
+        <a class="badge-link lc" href="https://leetcode.com" target="_blank">LeetCode</a>
+        <a class="badge-link doc" href="https://docs.python.org/3/" target="_blank">Python Docs</a>
+        <a class="badge-link art" href="https://insideevs.com/news/761865/rivian-zonal-architecture-development/"
+            target="_blank">Article</a>
+        <a class="badge-link ext"
+            href="https://freertos.org/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/01-RTOS-fundamentals"
+            target="_blank">External</a>
+        <a class="badge-link hack" href="https://www.hackerrank.com" target="_blank">HackerRank</a>
+    </div>
+
+    <div class="plan">
+
+        <!-- DAY 1 -->
+        <div class="card">
+            <div class="card-head">
+                <div class="day-badge" style="background:#E6F1FB;color:#185FA5">Day 1</div>
+                <div class="hd-text">
+                    <div class="title">C Foundations + First Code</div>
+                    <div class="sub">~6–7 hrs</div>
+                </div>
+            </div>
+            <div class="card-body">
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#185FA5"></span>Morning — C language core
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold"><code>volatile</code>, <code>const</code>, <code>static</code> — all
+                            three, write an example each</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/volatile-const/" target="_blank">EIL</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Pointers: array decay, void*, pointer-to-array vs array of pointers</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/pointers-arrays/" target="_blank">EIL</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Bitwise: set/clear/toggle/test, <code>1U</code> rule, extract/pack
+                            nibbles</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/code-patterns/" target="_blank">EIL</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Memory layout: .text / .data / .bss / stack — draw from memory</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/data-types-memory/"
+                                target="_blank">EIL</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">5 common embedded C bugs (volatile, overflow, dangling ptr, sign mismatch,
+                            CRC range)</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/c-cpp-concepts/"
+                                target="_blank">EIL Q&amp;A</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Structs, unions, bitfields — packed structs, register overlays</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/structs-unions-bitfields/"
+                                target="_blank">EIL</a></div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#0F6E56"></span>Afternoon — ISRs +
+                        Watchdog + Boot</div>
+                    <div class="row">
+                        <div class="row-text bold">ISR rules: no malloc, no blocking, short, volatile on shared vars
+                        </div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/interrupts-priorities/"
+                                target="_blank">EIL</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">NVIC priority levels, nested interrupts, latency</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/interrupts-priorities/"
+                                target="_blank">EIL Q&amp;A</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">IWDG vs WWDG, windowed mode, never feed in HardFault_Handler</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/watchdog/" target="_blank">EIL</a><a
+                                class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/watchdog-fundamentals/"
+                                target="_blank">Q&amp;A</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Boot sequence: vector table → Reset_Handler → .data/.bss →
+                            <code>main()</code></div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://interrupt.memfault.com/blog/how-to-write-a-bootloader-from-scratch"
+                                target="_blank">Memfault</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Function pointers + dispatch tables for state machines</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/function-pointers-callbacks/"
+                                target="_blank">EIL</a></div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#993C1D"></span>Evening — First coding
+                        session</div>
+                    <div class="row">
+                        <div class="row-text bold">Write ring buffer in C from scratch — 25 min timed, no reference
+                        </div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/code-patterns/" target="_blank">EIL
+                                pattern</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Warm-up: Number of 1 Bits</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/coding/bits/" target="_blank">EIL</a><a
+                                class="badge-link lc" href="https://leetcode.com/problems/number-of-1-bits/"
+                                target="_blank">LC #191</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Warm-up: Reverse Bits</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/coding/bits/" target="_blank">EIL</a><a
+                                class="badge-link lc" href="https://leetcode.com/problems/reverse-bits/"
+                                target="_blank">LC #190</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Warm-up: Single Number (XOR identity)</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/coding/bits/" target="_blank">EIL</a><a
+                                class="badge-link lc" href="https://leetcode.com/problems/single-number/"
+                                target="_blank">LC #136</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Main: Read N Characters Given Read4 (UART buffer analog)</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/coding/os-flavor/"
+                                target="_blank">EIL</a><a class="badge-link lc"
+                                href="https://algo.monster/liteproblems/157" target="_blank">AlgoMonster</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Concept Q&amp;A: C/C++ Embedded — first 10 questions, aloud</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/c-cpp-concepts/"
+                                target="_blank">EIL Q&amp;A</a></div>
+                    </div>
+                </div>
+
+                <div class="alert" style="background:#FAEEDA;border-left:3px solid #BA7517;color:#633806">Part 1 stays
+                    locked today. Ring buffer from scratch is non-negotiable.</div>
+            </div>
+        </div>
+
+        <!-- DAY 2 -->
+        <div class="card">
+            <div class="card-head">
+                <div class="day-badge" style="background:#E1F5EE;color:#0F6E56">Day 2</div>
+                <div class="hd-text">
+                    <div class="title">Embedded Deep Dive + PID</div>
+                    <div class="sub">~6–7 hrs</div>
+                </div>
+            </div>
+            <div class="card-body">
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#185FA5"></span>Morning — CAN, UART, RTOS
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">CAN: Classic vs FD, arbitration, bit timing, error passive vs bus-off
+                        </div>
+                        <div class="links"><a class="badge-link eil" href="https://embeddedinterviewlab.com/topics/can/"
+                                target="_blank">EIL</a><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/can-protocol/"
+                                target="_blank">Q&amp;A</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">CAN messaging: cyclic vs event-triggered vs hybrid heartbeat</div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://www.csselectronics.com/pages/can-bus-simple-intro-tutorial"
+                                target="_blank">CSS Electronics</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">DBC file: what it maps, how it's used with CANalyzer</div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://www.csselectronics.com/pages/can-dbc-file-database-intro"
+                                target="_blank">CSS Electronics</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">UART: baud rate config, framing, ring buffer integration</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/uart/" target="_blank">EIL</a><a
+                                class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/uart-protocol/"
+                                target="_blank">Q&amp;A</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">RTOS: task states, mutex vs semaphore, priority inversion +
+                            inheritance fix</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/rtos-fundamentals/"
+                                target="_blank">EIL</a><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/rtos-sync-primitives/"
+                                target="_blank">Sync</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Bare-metal vs RTOS tradeoff: when each is appropriate</div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://freertos.org/Documentation/01-FreeRTOS-quick-start/01-Beginners-guide/01-RTOS-fundamentals"
+                                target="_blank">FreeRTOS</a></div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#0F6E56"></span>Afternoon — PID + SPI +
+                        DMA + timers</div>
+                    <div class="row">
+                        <div class="row-text bold">PID: P/I/D physical meaning, integral windup,
+                            derivative-on-measurement</div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://www.ni.com/en/shop/labview/pid-theory-explained.html" target="_blank">NI
+                                PID guide</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">H-bridge: shoot-through, PWM speed control, L/R time constant</div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://www.ti.com/lit/an/slva767d/slva767d.pdf" target="_blank">TI App Note</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">SPI: AS5048A two-transaction read, CPOL/CPHA modes, CS timing</div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://www.analog.com/en/resources/analog-dialogue/articles/introduction-to-spi-interface.html"
+                                target="_blank">Analog Devices</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">DMA: normal vs circular mode, idle-line ISR, M7 cache coherency</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/dma-fundamentals/"
+                                target="_blank">EIL Q&amp;A</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Software timer: SysTick + unsigned subtraction rollover trick</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/interrupts-priorities/"
+                                target="_blank">EIL (SysTick)</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Driver design: HAL vs bare metal tradeoffs</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/driver-design-hal/"
+                                target="_blank">EIL</a><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/driver-design/"
+                                target="_blank">Q&amp;A</a></div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#993C1D"></span>Evening — PID code +
+                        linked lists + OS-flavor</div>
+                    <div class="row">
+                        <div class="row-text bold">Write <code>pid_update()</code> in C: anti-windup clamp + deriv on
+                            measurement</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/code-patterns/" target="_blank">EIL
+                                patterns</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Warm-up: Convert Number to Hexadecimal</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/coding/bits/" target="_blank">EIL</a><a
+                                class="badge-link lc"
+                                href="https://leetcode.com/problems/convert-a-number-to-hexadecimal/" target="_blank">LC
+                                #405</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Main: Exclusive Time of Functions (RTOS preemption analog)</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/coding/os-flavor/"
+                                target="_blank">EIL</a><a class="badge-link lc"
+                                href="https://leetcode.com/problems/exclusive-time-of-functions/" target="_blank">LC
+                                #636</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Bonus: Reverse Linked List + Linked List Cycle</div>
+                        <div class="links"><a class="badge-link lc"
+                                href="https://leetcode.com/problems/reverse-linked-list/" target="_blank">LC #206</a><a
+                                class="badge-link lc" href="https://leetcode.com/problems/linked-list-cycle/"
+                                target="_blank">LC #141</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Concept Q&amp;A: Interrupts &amp; Priorities — all 12, aloud</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/interrupts-priorities/"
+                                target="_blank">EIL Q&amp;A</a></div>
+                    </div>
+                </div>
+
+                <div class="alert" style="background:#EAF3DE;border-left:3px solid #3B6D11;color:#173404">Ring buffer +
+                    PID both writable from memory by end of today.</div>
+            </div>
+        </div>
+
+        <!-- DAY 3 -->
+        <div class="card">
+            <div class="card-head">
+                <div class="day-badge" style="background:#FAEEDA;color:#854F0B">Day 3</div>
+                <div class="hd-text">
+                    <div class="title">Python + System Design + Heavy Coding</div>
+                    <div class="sub">~6–7 hrs</div>
+                </div>
+            </div>
+            <div class="card-body">
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#185FA5"></span>Morning — Python testing
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">pytest: fixture <code>scope</code>, <code>autouse</code>,
+                            <code>yield</code> teardown, <code>parametrize</code></div>
+                        <div class="links"><a class="badge-link doc"
+                                href="https://docs.pytest.org/en/stable/reference/fixtures.html" target="_blank">pytest
+                                docs</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Write serial fixture with CRC-8, <code>send_command()</code>,
+                            <code>read_status()</code></div>
+                        <div class="links"><a class="badge-link doc"
+                                href="https://pyserial.readthedocs.io/en/latest/pyserial_api.html"
+                                target="_blank">pyserial API</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Timed polling loop: <code>deadline = time.time() + N</code>, not bare
+                            sleep</div>
+                        <div class="links"><a class="badge-link doc" href="https://docs.python.org/3/library/time.html"
+                                target="_blank">Python time</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold"><code>struct.unpack</code> format strings — endianness,
+                            <code>&lt;Ifhb</code></div>
+                        <div class="links"><a class="badge-link doc"
+                                href="https://docs.python.org/3/library/struct.html" target="_blank">struct docs</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Generators for streaming telemetry, context managers for HW resources
+                        </div>
+                        <div class="links"><a class="badge-link doc"
+                                href="https://docs.python.org/3/glossary.html#term-generator" target="_blank">Python
+                                glossary</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Mocking: <code>MagicMock</code> for SIL tests, <code>pytest.raises</code>
+                        </div>
+                        <div class="links"><a class="badge-link doc"
+                                href="https://docs.python.org/3/library/unittest.mock.html" target="_blank">mock
+                                docs</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Testing vocab: HIL, unit, coverage, CI/CD for embedded</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/testing-and-coverage/"
+                                target="_blank">EIL</a><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/debugging-testing/"
+                                target="_blank">Q&amp;A</a></div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#0F6E56"></span>Afternoon — System design
+                        + remaining embedded</div>
+                    <div class="row">
+                        <div class="row-text bold">Power liftgate: 5-step framework (clarify → FSM → layers → fault →
+                            test)</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/system-design/embedded-system-design/"
+                                target="_blank">EIL method</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Motor control system design — ISR architecture, closed-loop, safety
+                        </div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/system-design/motor-control-system/"
+                                target="_blank">EIL design</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Automotive CAN network: segment by speed, priority assignment,
+                            gateway</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/system-design/automotive-can-network/"
+                                target="_blank">EIL design</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Multi-MCU system design — maps to PX4 + STM32 zone controller pattern
+                        </div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/system-design/multi-mcu-system/"
+                                target="_blank">EIL design</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">S-curve / trapezoidal velocity profile — why all body actuators need it
+                        </div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://www.linearmotiontips.com/how-to-reduce-vibration-with-s-curve-motion-profiles/"
+                                target="_blank">Linear Motion Tips</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">LIN bus: 20 kbps, master-slave, leaf-node actuator use case</div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://www.csselectronics.com/pages/lin-bus-intro-tutorial" target="_blank">CSS
+                                Electronics</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Safety mechanisms: fail-safe, watchdog strategies, redundancy patterns
+                        </div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/safety-mechanisms/"
+                                target="_blank">EIL</a></div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#993C1D"></span>Evening — Coding blitz
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">OS-flavor set — complete all 11 problems</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/coding/os-flavor/" target="_blank">EIL
+                                (all 11)</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Main: Task Scheduler (rate-monotonic analog)</div>
+                        <div class="links"><a class="badge-link lc" href="https://leetcode.com/problems/task-scheduler/"
+                                target="_blank">LC #621</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Main: UTF-8 Validation (multi-byte frame validation)</div>
+                        <div class="links"><a class="badge-link lc"
+                                href="https://leetcode.com/problems/utf-8-validation/" target="_blank">LC #393</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Bonus: LRU Cache (CAN mailbox analog)</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/coding/data-structure/"
+                                target="_blank">EIL</a><a class="badge-link lc"
+                                href="https://leetcode.com/problems/lru-cache/" target="_blank">LC #146</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Bonus: Sum of Two Integers (two's complement deep dive)</div>
+                        <div class="links"><a class="badge-link lc"
+                                href="https://leetcode.com/problems/sum-of-two-integers/" target="_blank">LC #371</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Concept Q&amp;A: CAN Protocol (12) + RTOS/OS (first 10)</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/can-protocol/"
+                                target="_blank">CAN Q&amp;A</a><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/operating-systems/"
+                                target="_blank">RTOS Q&amp;A</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">HackerRank: create account, run one C + one Python problem</div>
+                        <div class="links"><a class="badge-link hack" href="https://www.hackerrank.com/domains/c"
+                                target="_blank">HR C</a><a class="badge-link hack"
+                                href="https://www.hackerrank.com/domains/python" target="_blank">HR Python</a></div>
+                    </div>
+                </div>
+
+                <div class="alert" style="background:#E6F1FB;border-left:3px solid #185FA5;color:#0C447C">CodePair must
+                    not be a surprise on interview day. Do HackerRank tonight.</div>
+            </div>
+        </div>
+
+        <!-- DAY 4 -->
+        <div class="card">
+            <div class="card-head">
+                <div class="day-badge" style="background:#FCEBEB;color:#A32D2D">Day 4</div>
+                <div class="hd-text">
+                    <div class="title">Part 1 + Full Rehearsal + Day-Of Prep</div>
+                    <div class="sub">~5–6 hrs — zero new material</div>
+                </div>
+            </div>
+            <div class="card-body">
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#185FA5"></span>Morning — Part 1:
+                        projects + experience</div>
+                    <div class="row">
+                        <div class="row-text bold">Opening statement — speak aloud 3× until effortless, no pausing</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/system-design/motor-control-system/"
+                                target="_blank">EIL vocab</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Landing gear Q&amp;A: walk-through, encoder choice, cross-validation,
+                            UART protocol, test pyramid</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/concept/debugging-testing/"
+                                target="_blank">EIL testing Q&amp;A</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">"What would you change for production?" — MISRA-C, CRC-16-CCITT,
+                            redundant OCP</div>
+                        <div class="links"><a class="badge-link ext" href="https://misra.org.uk/misra-c/"
+                                target="_blank">MISRA-C</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Axon C2: FastAPI + pytest + why not QGroundControl</div>
+                        <div class="links"><a class="badge-link doc" href="https://docs.pytest.org/en/stable/"
+                                target="_blank">pytest docs</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Aamod's PID probes: P→I→D sequence, back-off to 60%, PI-only for
+                            cinch</div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://www.ni.com/en/shop/labview/pid-theory-explained.html" target="_blank">NI
+                                PID guide</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Back-EMF: effect on current sensing, speed-dependent stall threshold</div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://www.ti.com/lit/an/slva767d/slva767d.pdf" target="_blank">TI App Note</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#0F6E56"></span>Afternoon — Rivian
+                        context + strategy</div>
+                    <div class="row">
+                        <div class="row-text bold">Rivian zonal architecture: 7 ECUs, 3 zone controllers
+                            (West/East/South), −1.6 mi wiring</div>
+                        <div class="links"><a class="badge-link art"
+                                href="https://insideevs.com/news/761865/rivian-zonal-architecture-development/"
+                                target="_blank">InsideEVs</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">RV Tech JV: 50/50 Rivian+VW, winter testing milestone, R2 H1 2026
+                            launch</div>
+                        <div class="links"><a class="badge-link art"
+                                href="https://en.wikipedia.org/wiki/Rivian_and_Volkswagen_Group_Technologies"
+                                target="_blank">Wikipedia</a><a class="badge-link art"
+                                href="https://www.adt.media/software-defined-vehicles/vw-and-rivian-advance-zonal-sdv-architecture/2132196"
+                                target="_blank">ADT Media</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Why Rivian avoids AUTOSAR — iteration speed, supplier independence</div>
+                        <div class="links"><a class="badge-link ext"
+                                href="https://www.autosar.org/standards/classic-platform" target="_blank">AUTOSAR</a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">2 questions memorized: intern ownership scope + test infra scope
+                        </div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/system-design/embedded-system-design/"
+                                target="_blank">EIL (context)</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">60-min pacing: 0–15 experience / 15–40 concepts / 40–55 coding / 55–60
+                            questions</div>
+                        <div class="links"><a class="badge-link hack"
+                                href="https://www.hackerrank.com/skills-verification" target="_blank">HackerRank</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="blk">
+                    <div class="blk-label"><span class="dot" style="background:#993C1D"></span>Evening — From-memory
+                        drill + CodePair setup</div>
+                    <div class="row">
+                        <div class="row-text bold">Write ring buffer in C from blank editor — timed, no reference</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/code-patterns/" target="_blank">EIL (check
+                                after)</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Write <code>pid_update()</code> in C from memory — anti-windup, deriv
+                            on measurement</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/topics/code-patterns/" target="_blank">EIL (check
+                                after)</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Write pytest serial fixture from memory</div>
+                        <div class="links"><a class="badge-link doc"
+                                href="https://docs.pytest.org/en/stable/reference/fixtures.html" target="_blank">pytest
+                                (check after)</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Draw landing gear FSM on paper: STOWED / DEPLOYING / DEPLOYED /
+                            RETRACTING / FAULT</div>
+                        <div class="links"><a class="badge-link eil"
+                                href="https://embeddedinterviewlab.com/interview/system-design/embedded-system-design/"
+                                target="_blank">EIL FSM</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text">Type C + Python CodePair header skeletons from memory</div>
+                        <div class="links"><a class="badge-link hack"
+                                href="https://www.hackerrank.com/interview/interview-preparation-kit"
+                                target="_blank">HackerRank</a></div>
+                    </div>
+                    <div class="row">
+                        <div class="row-text bold">Read: Rivian R2 architecture + RV Tech winter testing — 15 min</div>
+                        <div class="links"><a class="badge-link art"
+                                href="https://www.vaisakhvenugopal.com/p/reality-of-rivian-r2-setting-industrys"
+                                target="_blank">R2 deep dive</a><a class="badge-link art"
+                                href="https://www.adt.media/software-defined-vehicles/vw-and-rivian-advance-zonal-sdv-architecture/2132196"
+                                target="_blank">Winter testing</a></div>
+                    </div>
+                </div>
+
+                <div class="alert" style="background:#FCEBEB;border-left:3px solid #A32D2D;color:#501313">No new
+                    concepts tonight. If you don't know it by now, more cramming hurts.</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CHECKLIST -->
+    <div class="checklist">
+        <h2>Must-do checklist before interview day</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:42%">Task</th>
+                    <th style="width:13%">Day</th>
+                    <th style="width:13%">Priority</th>
+                    <th>Why it matters</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ring buffer in C — from scratch, no reference</td>
+                    <td>Day 1 + 4</td>
+                    <td><span class="pill pill-red">Critical</span></td>
+                    <td>Most likely live coding problem</td>
+                </tr>
+                <tr>
+                    <td><code>pid_update()</code> in C — anti-windup + deriv on measurement</td>
+                    <td>Day 2 + 4</td>
+                    <td><span class="pill pill-red">Critical</span></td>
+                    <td>Aamod's home domain</td>
+                </tr>
+                <tr>
+                    <td>pytest serial fixture — write from scratch</td>
+                    <td>Day 3 + 4</td>
+                    <td><span class="pill pill-red">Critical</span></td>
+                    <td>Python segment of interview</td>
+                </tr>
+                <tr>
+                    <td>All 11 OS-flavor problems on EIL</td>
+                    <td>Day 2–3</td>
+                    <td><span class="pill pill-red">Critical</span></td>
+                    <td>Maps directly to RTOS reasoning</td>
+                </tr>
+                <tr>
+                    <td>C/C++ Concept Q&amp;A — all 20 questions</td>
+                    <td>Day 1–2</td>
+                    <td><span class="pill pill-red">Critical</span></td>
+                    <td>Bhushan's C litmus test</td>
+                </tr>
+                <tr>
+                    <td>CAN Protocol Concept Q&amp;A — all 12 questions</td>
+                    <td>Day 3</td>
+                    <td><span class="pill pill-red">Critical</span></td>
+                    <td>Bhushan's FEV background = CAN daily</td>
+                </tr>
+                <tr>
+                    <td>EIL motor control system design page</td>
+                    <td>Day 3</td>
+                    <td><span class="pill pill-amber">High</span></td>
+                    <td>Vocab for landing gear walkthrough</td>
+                </tr>
+                <tr>
+                    <td>EIL automotive CAN network design page</td>
+                    <td>Day 3</td>
+                    <td><span class="pill pill-amber">High</span></td>
+                    <td>Bhushan's exact domain</td>
+                </tr>
+                <tr>
+                    <td>Opening statement — 3× aloud until effortless</td>
+                    <td>Day 4</td>
+                    <td><span class="pill pill-red">Critical</span></td>
+                    <td>Sets the tone for the entire interview</td>
+                </tr>
+                <tr>
+                    <td>HackerRank account + one C + one Python problem</td>
+                    <td>Day 3</td>
+                    <td><span class="pill pill-green">Do it</span></td>
+                    <td>CodePair environment must not be a surprise</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function toggleDark() {
+            const isDark = document.body.classList.toggle('dark');
+            document.getElementById('dm-icon').textContent = isDark ? '○' : '☾';
+            document.getElementById('dm-label').textContent = isDark ? 'Light' : 'Dark';
+            localStorage.setItem('rivian-dark', isDark ? '1' : '0');
+        }
+        if (localStorage.getItem('rivian-dark') === '1') {
+            document.body.classList.add('dark');
+            document.getElementById('dm-icon').textContent = '○';
+            document.getElementById('dm-label').textContent = 'Light';
+        }
+    </script>
+</body>
+
+</html>
