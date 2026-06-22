@@ -238,11 +238,16 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Guarding it means: real credentials → full Supabase sync, exactly as
 // before; placeholder/missing credentials → app still loads and works,
 // just without cloud sync (a "sync not configured" note appears instead).
-let supabase = null;
+//
+// NOTE: the variable is named supabaseClient (not "supabase") because the
+// Supabase CDN script itself creates a global `window.supabase` object —
+// declaring a top-level `let supabase` in this script collides with that
+// and throws "Identifier 'supabase' has already been declared".
+let supabaseClient = null;
 let supabaseConfigured = false;
 try {
   if (SUPABASE_URL && SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY") {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     supabaseConfigured = true;
   }
 } catch (error) {
@@ -282,9 +287,9 @@ function loadProgress() {
   }
 
   // Mirrors:
-  // supabase.from("progress").select("checks").eq("id", USER_ID).single()
+  // supabaseClient.from("progress").select("checks").eq("id", USER_ID).single()
   //   .then(({ data, error }) => { ... })
-  supabase
+  supabaseClient
     .from("progress")
     .select("checks")
     .eq("id", USER_ID)
@@ -321,7 +326,7 @@ function toggleCheck(id) {
   state.saving = true;
   renderHeaderSavingIndicator();
   saveTimerRef = setTimeout(() => {
-    supabase
+    supabaseClient
       .from("progress")
       .upsert({ id: USER_ID, checks: checksRef })
       .then(({ error }) => {
