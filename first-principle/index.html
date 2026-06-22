@@ -231,7 +231,23 @@ const ROADMAP_DATA = {"phases":[{"id":"p1","label":"Phase 1","title":"First Prin
 const SUPABASE_URL = "https://frsaqggqjrbntxfjhjgv.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyc2FxZ2dxanJibnR4Zmpoamd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMjMzMDcsImV4cCI6MjA4ODg5OTMwN30.VPaqyCQ-DrurVAjB5LFQqn15nX36q1pWrdK30UGv7S0";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// createClient() throws synchronously on an invalid URL (e.g. the unfilled
+// placeholder above). Without this guard, that throw happens at script
+// parse-time and aborts the ENTIRE script — nothing below it runs, so the
+// page renders nothing at all and looks "blank" with no visible error.
+// Guarding it means: real credentials → full Supabase sync, exactly as
+// before; placeholder/missing credentials → app still loads and works,
+// just without cloud sync (a "sync not configured" note appears instead).
+let supabase = null;
+let supabaseConfigured = false;
+try {
+  if (SUPABASE_URL && SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY") {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseConfigured = true;
+  }
+} catch (error) {
+  console.error("Supabase init failed:", error);
+}
 const USER_ID = "my-progress";
 
 const PHASES = ROADMAP_DATA.phases;
@@ -257,6 +273,14 @@ let saveTimerRef = undefined;
 // Persistence layer (Supabase — identical logic to the original useEffect/toggleCheck)
 // ----------------------------------------------------------------------------
 function loadProgress() {
+  if (!supabaseConfigured) {
+    // No Supabase project configured — skip the network call and just show
+    // the app with blank progress instead of hanging on "Loading roadmap…".
+    state.loaded = true;
+    render();
+    return;
+  }
+
   // Mirrors:
   // supabase.from("progress").select("checks").eq("id", USER_ID).single()
   //   .then(({ data, error }) => { ... })
@@ -275,6 +299,11 @@ function loadProgress() {
       }
       state.loaded = true;
       render();
+    })
+    .catch(error => {
+      console.error("Load failed:", error);
+      state.loaded = true;
+      render();
     });
 }
 
@@ -286,6 +315,8 @@ function toggleCheck(id) {
   checksRef = next;
   render();
 
+  if (!supabaseConfigured) return; // local-only; nothing to sync
+
   clearTimeout(saveTimerRef);
   state.saving = true;
   renderHeaderSavingIndicator();
@@ -295,6 +326,11 @@ function toggleCheck(id) {
       .upsert({ id: USER_ID, checks: checksRef })
       .then(({ error }) => {
         if (error) console.error("Save failed:", error);
+        state.saving = false;
+        renderHeaderSavingIndicator();
+      })
+      .catch(error => {
+        console.error("Save failed:", error);
         state.saving = false;
         renderHeaderSavingIndicator();
       });
@@ -676,6 +712,7 @@ function render() {
             <div class="header-sub">
               10-MONTH FIRST-PRINCIPLES ROADMAP · MODELING → SIMULATION → DIGITAL TWINS → V&amp;V → SELF-LEARNING SYSTEMS · ENGINEER · CONSULTANT · FOUNDER
               <span id="saving-indicator" class="saving-indicator" style="display:${state.saving ? "inline" : "none"};"> · saving…</span>
+              ${!supabaseConfigured ? '<span style="color:var(--amber);"> · cloud sync not configured (progress saved in this session only — set SUPABASE_URL/SUPABASE_ANON_KEY in the script to enable it)</span>' : ""}
             </div>
           </div>
           <div class="overall-wrap">
