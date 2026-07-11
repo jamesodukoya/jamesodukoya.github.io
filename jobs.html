@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Job Watch — Matches</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --bg: #070B14;
+  --surface: #0D1525;
+  --surface2: #111B30;
+  --border: #1A2D4A;
+  --border2: #243C60;
+  --blue: #2D7FF9;
+  --blueLight: #60A5FA;
+  --amber: #F59E0B;
+  --green: #10B981;
+  --greenDim: #064E3B;
+  --red: #EF4444;
+  --purple: #A855F7;
+  --cyan: #06B6D4;
+  --text: #E2E8F0;
+  --textDim: #7B95B8;
+  --textMuted: #4A6FA8;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+  --display: 'Syne', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); }
+body { font-family: var(--sans); color: var(--text); min-height: 100vh; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--blue); }
+a { color: var(--blueLight); text-decoration: none; }
+a:hover { color: #93C5FD; text-decoration: underline; }
+
+.wrap { max-width: 920px; margin: 0 auto; padding: 40px 20px 80px; }
+
+h1 {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.sub { color: var(--textDim); font-size: 14px; margin-bottom: 28px; }
+.sub .status { font-family: var(--mono); }
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.controls input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 14px;
+}
+.controls input[type="text"]:focus { outline: none; border-color: var(--blue); }
+.toggle-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--textDim);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.toggle-btn.active { border-color: var(--blue); color: var(--blueLight); background: var(--surface2); }
+
+.count-row {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--textMuted);
+  margin-bottom: 16px;
+}
+
+.job {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  transition: border-color 0.15s;
+}
+.job:hover { border-color: var(--border2); }
+.job.applied { opacity: 0.5; }
+
+.job-check {
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--green);
+}
+
+.job-main { flex: 1; min-width: 0; }
+.job-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.job.applied .job-title { text-decoration: line-through; }
+.job-meta {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--textDim);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.job-meta .salary { color: var(--green); }
+.job-meta .source { color: var(--textMuted); }
+
+.empty, .error {
+  text-align: center;
+  color: var(--textDim);
+  padding: 60px 20px;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.error { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Job Watch — Matches</h1>
+  <div class="sub">Everything job_watch.py has matched, so a push notification you couldn't act on isn't gone for good. <span class="status" id="statusLine"></span></div>
+
+  <div class="controls">
+    <input type="text" id="searchBox" placeholder="Filter by title, company, or location…">
+    <button class="toggle-btn" id="hideAppliedBtn">Hide applied</button>
+  </div>
+
+  <div class="count-row" id="countRow"></div>
+
+  <div id="list"></div>
+</div>
+
+<script>
+// Fill these in and commit this file normally — this is a one-time, ordinary
+// git commit, not something job-watch.yml ever touches. SUPABASE_ANON_KEY
+// is the PUBLIC anon key (safe to expose client-side, same as the roadmap
+// page) — never put the service_role key here.
+const SUPABASE_URL = "https://frsaqggqjrbntxfjhjgv.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyc2FxZ2dxanJibnR4Zmpoamd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMjMzMDcsImV4cCI6MjA4ODg5OTMwN30.VPaqyCQ-DrurVAjB5LFQqn15nX36q1pWrdK30UGv7S0";
+
+let supabaseClient = null;
+if (SUPABASE_URL && SUPABASE_URL !== "YOUR_SUPABASE_URL" && SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY") {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+let allJobs = [];
+let hideApplied = false;
+
+function timeAgo(iso) {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+function render() {
+  const q = document.getElementById("searchBox").value.trim().toLowerCase();
+  const list = document.getElementById("list");
+  const filtered = allJobs.filter(j => {
+    if (hideApplied && j.applied) return false;
+    if (!q) return true;
+    const hay = `${j.title} ${j.company} ${j.location}`.toLowerCase();
+    return hay.includes(q);
+  });
+
+  document.getElementById("countRow").textContent =
+    `${filtered.length} shown · ${allJobs.length} total · ${allJobs.filter(j => j.applied).length} marked applied`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty">Nothing matches. ${allJobs.length === 0 ? "Either job_watch.py hasn't found anything yet, or SUPABASE_URL/SUPABASE_ANON_KEY above still need filling in." : "Try clearing the filter."}</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(j => `
+    <div class="job ${j.applied ? "applied" : ""}" data-id="${j.id}">
+      <input type="checkbox" class="job-check" ${j.applied ? "checked" : ""} onchange="toggleApplied('${j.id}', this.checked)">
+      <div class="job-main">
+        <div class="job-title"><a href="${j.url}" target="_blank" rel="noopener">${j.company ? j.company + ": " : ""}${j.title}</a></div>
+        <div class="job-meta">
+          <span>${j.location || "location n/a"}</span>
+          <span class="salary">${j.salary_label || "salary not listed"}</span>
+          <span class="source">via ${j.source || "?"}</span>
+          <span>${timeAgo(j.matched_at)}</span>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function toggleApplied(id, applied) {
+  const job = allJobs.find(j => j.id === id);
+  if (job) job.applied = applied;
+  render();
+  if (!supabaseClient) return;
+  const { error } = await supabaseClient
+    .from("job_watch_matches")
+    .update({ applied })
+    .eq("id", id);
+  if (error) console.error("failed to save applied state:", error);
+}
+
+async function loadJobs() {
+  const statusLine = document.getElementById("statusLine");
+  if (!supabaseClient) {
+    statusLine.textContent = "— not configured yet (fill in SUPABASE_URL / SUPABASE_ANON_KEY in this file)";
+    document.getElementById("list").innerHTML = `<div class="error">Set SUPABASE_URL and SUPABASE_ANON_KEY at the top of this file's script tag, then commit and reload.</div>`;
+    return;
+  }
+  statusLine.textContent = "— loading…";
+  const { data, error } = await supabaseClient
+    .from("job_watch_matches")
+    .select("*")
+    .order("matched_at", { ascending: false });
+
+  if (error) {
+    statusLine.textContent = "— error loading";
+    document.getElementById("list").innerHTML = `<div class="error">Could not load matches: ${error.message}</div>`;
+    return;
+  }
+  allJobs = data || [];
+  statusLine.textContent = `— last loaded ${new Date().toLocaleTimeString()}`;
+  render();
+}
+
+document.getElementById("searchBox").addEventListener("input", render);
+document.getElementById("hideAppliedBtn").addEventListener("click", (e) => {
+  hideApplied = !hideApplied;
+  e.target.classList.toggle("active", hideApplied);
+  render();
+});
+
+loadJobs();
+// Refresh automatically every 5 minutes if left open in a tab.
+setInterval(loadJobs, 5 * 60 * 1000);
+</script>
+</body>
+</html>
