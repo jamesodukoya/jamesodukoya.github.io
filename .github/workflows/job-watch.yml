@@ -15,8 +15,17 @@
 # just logs a skip notice and keeps running everything else. Every other
 # Layer 2 source (RemoteOK, Remotive, HN Who's Hiring) needs no key at all.
 #
-# That's it — this runs unattended, on GitHub's infrastructure, at no cost
-# for a public repo.
+# State (seen_jobs.json) is kept in the GitHub Actions cache, NOT committed
+# to the repo. That's deliberate: a bot that commits to the same branch you
+# develop on will eventually collide with your own pushes (exactly the
+# "non-fast-forward" error you'd get if it committed to main while you had
+# local commits in flight). The cache restore/save pattern below persists
+# state across runs without ever touching git history, so this workflow
+# can run on its own schedule with zero interaction with your normal
+# git workflow — no permissions on the repo needed either.
+#
+# This runs unattended, on GitHub's infrastructure, at no cost for a
+# public repo.
 
 name: Job Watch
 
@@ -30,9 +39,6 @@ on:
   workflow_dispatch: {}      # lets you trigger a run manually from the
                               # Actions tab to test it immediately
 
-permissions:
-  contents: write             # needed to commit the updated seen_jobs.json
-
 jobs:
   poll:
     runs-on: ubuntu-latest
@@ -43,6 +49,19 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Restores the most recent seen_jobs.json saved by a prior run.
+      # restore-keys does a prefix match, so it finds the latest save even
+      # though the exact key (below) is unique to this run and won't exist
+      # yet at restore time. If no cache exists at all (first-ever run),
+      # this is a harmless no-op and job_watch.py starts with a clean state.
+      - name: Restore job-watch state
+        uses: actions/cache/restore@v4
+        with:
+          path: seen_jobs.json
+          key: job-watch-state-${{ github.run_id }}
+          restore-keys: |
+            job-watch-state-
+
       - name: Run job watch
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
@@ -50,11 +69,11 @@ jobs:
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
         run: python job_watch.py
 
-      - name: Persist seen-jobs / throttle state
-        run: |
-          git config user.name "job-watch-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add seen_jobs.json
-          git diff --cached --quiet || git commit -m "job-watch: update state [skip ci]"
-          git push
-
+      # Saves under a key unique to this run, so next run's restore-keys
+      # prefix match picks THIS one up as the newest. Nothing here ever
+      # touches the repo's git history.
+      - name: Save job-watch state
+        uses: actions/cache/save@v4
+        with:
+          path: seen_jobs.json
+          key: job-watch-state-${{ github.run_id }}
