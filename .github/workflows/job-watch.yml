@@ -3,17 +3,27 @@
 #
 # One-time setup:
 #   1. Repo → Settings → Secrets and variables → Actions → New repository secret
-#      NTFY_TOPIC        = something-hard-to-guess-like-dara-jobwatch-9f3k
-#      ADZUNA_APP_ID      = (optional — free at developer.adzuna.com; Layer 2 only)
-#      ADZUNA_APP_KEY     = (optional — same registration)
+#      NTFY_TOPIC             = something-hard-to-guess-like-dara-jobwatch-9f3k
+#      ADZUNA_APP_ID           = (optional — free at developer.adzuna.com; Layer 2 only)
+#      ADZUNA_APP_KEY          = (optional — same registration)
+#      SUPABASE_URL            = (optional — enables the jobs.html "for later" page)
+#      SUPABASE_SERVICE_KEY    = (optional — the service_role key, NOT anon.
+#                                 Dashboard → Project Settings → API. Never put
+#                                 this one in client-side HTML, only here.)
 #   2. Subscribe to your NTFY_TOPIC in the ntfy app (iOS/Android) or at
 #      https://ntfy.sh/<same-topic> in a browser, so you get the push.
 #   3. Commit job_watch.py at the repo root (or update the `python` line
 #      below if you put it somewhere else).
+#   4. If using Supabase: run supabase_setup.sql once in your project's SQL
+#      editor, then fill in SUPABASE_URL and SUPABASE_ANON_KEY (the public
+#      one this time) at the top of jobs.html and commit it normally —
+#      that's a one-time, ordinary commit, not something this workflow
+#      ever touches.
 #
-# Adzuna is optional: skip the two ADZUNA_* secrets entirely and the script
-# just logs a skip notice and keeps running everything else. Every other
-# Layer 2 source (RemoteOK, Remotive, HN Who's Hiring) needs no key at all.
+# Adzuna and Supabase are both optional: skip their secrets and the script
+# logs a skip notice for that piece and keeps running everything else.
+# Every other Layer 2 source (RemoteOK, Remotive, HN Who's Hiring) needs no
+# key at all.
 #
 # State (seen_jobs.json) is kept in the GitHub Actions cache, NOT committed
 # to the repo. That's deliberate: a bot that commits to the same branch you
@@ -67,6 +77,8 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python job_watch.py
 
       # Saves under a key unique to this run, so next run's restore-keys

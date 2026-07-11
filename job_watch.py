@@ -162,6 +162,52 @@ def clears_floor(salary_low_high, structured_min=None, structured_max=None):
 NTFY_TOPIC = os.environ.get("NTFY_TOPIC", "")
 STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "seen_jobs.json")
 
+# ---------------------------------------------------------------------------
+# 4b. PERSISTENT LOG — Supabase, for the jobs.html "for later" page.
+#
+# Deliberately NOT a git commit (see job-watch.yml comments for why: a bot
+# committing to the branch you also develop on WILL eventually collide with
+# your own pushes). This is a plain HTTP POST to your Supabase project's
+# REST API instead — same project your roadmap page already talks to, if
+# you want to keep everything in one place. Requires SUPABASE_URL and
+# SUPABASE_SERVICE_KEY (the service_role key, NOT the anon key — this needs
+# to bypass row-level security to insert; the service_role key must only
+# ever live in a GitHub secret, never in client-side HTML). Run
+# supabase_setup.sql once before this will have anywhere to write to.
+# ---------------------------------------------------------------------------
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
+
+
+def log_to_supabase(job, source_label, salary_label):
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        return  # not configured — silently skip, notifications still work fine without this
+    payload = json.dumps({
+        "id": job["id"],
+        "title": job["title"],
+        "company": job.get("company", ""),
+        "location": job.get("location", ""),
+        "url": job["url"],
+        "source": source_label,
+        "salary_label": salary_label,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        f"{SUPABASE_URL}/rest/v1/job_watch_matches?on_conflict=id",
+        data=payload,
+        method="POST",
+        headers={
+            "apikey": SUPABASE_SERVICE_KEY,
+            "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates",
+        },
+    )
+    try:
+        urllib.request.urlopen(req, timeout=10)
+    except urllib.error.URLError as e:
+        # Never let a Supabase hiccup take down the notification pipeline.
+        print(f"supabase log failed for {job['id']}: {e}", file=sys.stderr)
+
 
 def http_get_json(url, timeout=15):
     req = urllib.request.Request(url, headers={"User-Agent": "job-watch/2.0"})
@@ -302,7 +348,8 @@ def fetch_adzuna():
         predicted = bool(j.get("salary_is_predicted"))
         out.append({
             "id": f"adzuna:{j.get('id', '')}",
-            "title": f"{company}: {j.get('title', '')}" if company else j.get("title", ""),
+            "title": j.get("title", ""),
+            "company": company,
             "location": loc,
             "url": j.get("redirect_url", ""),
             "content": j.get("description", "") or "",
@@ -324,7 +371,8 @@ def fetch_remoteok():
         tags = " ".join(j.get("tags", []) or [])
         out.append({
             "id": f"remoteok:{j['id']}",
-            "title": f"{j.get('company', '')}: {j.get('position', '')}",
+            "title": j.get("position", ""),
+            "company": j.get("company", ""),
             "location": j.get("location", ""),
             "url": j.get("url", ""),
             "content": (j.get("description", "") or "") + " " + tags,
@@ -351,7 +399,8 @@ def fetch_remotive():
             smin, smax = extracted
         out.append({
             "id": f"remotive:{j.get('id', '')}",
-            "title": f"{j.get('company_name', '')}: {j.get('title', '')}",
+            "title": j.get("title", ""),
+            "company": j.get("company_name", ""),
             "location": j.get("candidate_required_location", ""),
             "url": j.get("url", ""),
             "content": strip_html(j.get("description", "")) + " " + salary_text,
@@ -477,7 +526,11 @@ def process_jobs(jobs, source_label, state, counters):
         else:
             salary_label = "salary not listed"
 
-        notify(title=job["title"], body=f"{job['location']} | {salary_label} | via {source_label}", url=job["url"])
+        company = job.get("company", "")
+        display_title = f"{company}: {job['title']}" if company else job["title"]
+
+        notify(title=display_title, body=f"{job['location']} | {salary_label} | via {source_label}", url=job["url"])
+        log_to_supabase(job, source_label, salary_label)
         counters["new_matches"] += 1
 
     state[f"seen:{source_label}"] = list(current_ids)
@@ -499,6 +552,8 @@ def main():
         except Exception as e:
             print(f"fetch failed for {name} ({ats}:{token}): {e}", file=sys.stderr)
             continue
+        for job in jobs:
+            job["company"] = name
         process_jobs(jobs, f"{ats}:{token}", state, counters)
         time.sleep(0.5)
 
