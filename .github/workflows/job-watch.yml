@@ -1,0 +1,60 @@
+# Place this file at .github/workflows/job-watch.yml in your repo
+# (the same repo your roadmap site already lives in works fine).
+#
+# One-time setup:
+#   1. Repo → Settings → Secrets and variables → Actions → New repository secret
+#      NTFY_TOPIC        = something-hard-to-guess-like-dara-jobwatch-9f3k
+#      ADZUNA_APP_ID      = (optional — free at developer.adzuna.com; Layer 2 only)
+#      ADZUNA_APP_KEY     = (optional — same registration)
+#   2. Subscribe to your NTFY_TOPIC in the ntfy app (iOS/Android) or at
+#      https://ntfy.sh/<same-topic> in a browser, so you get the push.
+#   3. Commit job_watch.py at the repo root (or update the `python` line
+#      below if you put it somewhere else).
+#
+# Adzuna is optional: skip the two ADZUNA_* secrets entirely and the script
+# just logs a skip notice and keeps running everything else. Every other
+# Layer 2 source (RemoteOK, Remotive, HN Who's Hiring) needs no key at all.
+#
+# That's it — this runs unattended, on GitHub's infrastructure, at no cost
+# for a public repo.
+
+name: Job Watch
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # every 15 minutes. GitHub may delay a few
+                              # minutes under load; it will never be slower
+                              # than that on its own. Layer 2 sources
+                              # self-throttle far below this cadence — see
+                              # AGGREGATOR_FETCHERS in job_watch.py.
+  workflow_dispatch: {}      # lets you trigger a run manually from the
+                              # Actions tab to test it immediately
+
+permissions:
+  contents: write             # needed to commit the updated seen_jobs.json
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run job watch
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+        run: python job_watch.py
+
+      - name: Persist seen-jobs / throttle state
+        run: |
+          git config user.name "job-watch-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add seen_jobs.json
+          git diff --cached --quiet || git commit -m "job-watch: update state [skip ci]"
+          git push
+
