@@ -204,8 +204,10 @@ def log_to_supabase(job, source_label, salary_label):
     )
     try:
         urllib.request.urlopen(req, timeout=10)
-    except urllib.error.URLError as e:
-        # Never let a Supabase hiccup take down the notification pipeline.
+    except Exception as e:
+        # Broad on purpose — same lesson as notify(): a raw socket
+        # TimeoutError isn't a urllib.error.URLError and would otherwise
+        # escape uncaught. Never let a Supabase hiccup take down the run.
         print(f"supabase log failed for {job['id']}: {e}", file=sys.stderr)
 
 
@@ -486,9 +488,17 @@ def mark_run(state, key):
     state[f"lastrun:{key}"] = time.time()
 
 
+MAX_NOTIFICATIONS_PER_RUN = 25  # hard safety valve — see notify() and process_jobs()
+_notif_count = 0
+
+
 def notify(title, body, url):
+    global _notif_count
     if not NTFY_TOPIC:
         print(f"[NOTIFY - set NTFY_TOPIC to actually send] {title}\n{body}\n{url}\n")
+        return
+    if _notif_count >= MAX_NOTIFICATIONS_PER_RUN:
+        print(f"notify capped at {MAX_NOTIFICATIONS_PER_RUN} for this run, skipping: {title}", file=sys.stderr)
         return
     req = urllib.request.Request(
         f"https://ntfy.sh/{NTFY_TOPIC}",
@@ -498,16 +508,32 @@ def notify(title, body, url):
     )
     try:
         urllib.request.urlopen(req, timeout=10)
-    except urllib.error.URLError as e:
+    except Exception as e:
+        # Deliberately broad: a raw socket TimeoutError (not a URLError) is
+        # exactly what crashed the whole run last time. One failed push must
+        # never take the rest of the run down with it.
         print(f"notify failed: {e}", file=sys.stderr)
+    finally:
+        _notif_count += 1
+        time.sleep(1.0)  # stay well under ntfy.sh's per-visitor rate limit
 
 
 def process_jobs(jobs, source_label, state, counters):
-    seen_ids = set(state.get(f"seen:{source_label}", []))
+    state_key = f"seen:{source_label}"
+    is_cold_start = state_key not in state  # this source has never been polled before
+    seen_ids = set(state.get(state_key, []))
     current_ids = set()
     for job in jobs:
         current_ids.add(job["id"])
         if job["id"] in seen_ids:
+            continue
+        if is_cold_start:
+            # Everything currently open looks "new" on a first poll — that's
+            # not the same thing as "just posted." Silently adopt it as the
+            # baseline so only genuinely new postings from here on trigger
+            # anything. This is what was missing before: the first-ever run
+            # (or the first run after adding a new company) tried to notify
+            # on every open req across every source all at once.
             continue
         if not matches_keywords(job):
             continue
@@ -533,12 +559,14 @@ def process_jobs(jobs, source_label, state, counters):
         log_to_supabase(job, source_label, salary_label)
         counters["new_matches"] += 1
 
-    state[f"seen:{source_label}"] = list(current_ids)
+    if is_cold_start and current_ids:
+        counters["baseline_established"] = counters.get("baseline_established", 0) + 1
+    state[state_key] = list(current_ids)
 
 
 def main():
     state = load_state()
-    counters = {"new_matches": 0, "skipped_below_floor": 0}
+    counters = {"new_matches": 0, "skipped_below_floor": 0, "baseline_established": 0}
 
     # --- Layer 1: direct ATS polling — every run, no throttle ---
     for company in COMPANIES:
@@ -549,12 +577,16 @@ def main():
             continue
         try:
             jobs = fetcher(token)
+            for job in jobs:
+                job["company"] = name
+            process_jobs(jobs, f"{ats}:{token}", state, counters)
         except Exception as e:
-            print(f"fetch failed for {name} ({ats}:{token}): {e}", file=sys.stderr)
-            continue
-        for job in jobs:
-            job["company"] = name
-        process_jobs(jobs, f"{ats}:{token}", state, counters)
+            # Broad on purpose: one company's feed acting up (bad token, ATS
+            # migration, timeout, or anything inside process_jobs/notify
+            # that still somehow got through) must never take the rest of
+            # the run down with it.
+            print(f"failed for {name} ({ats}:{token}): {e}", file=sys.stderr)
+        save_state(state)  # incremental — a later crash won't erase this company's progress
         time.sleep(0.5)
 
     # --- Layer 2: broad aggregators — throttled per source ---
@@ -563,16 +595,17 @@ def main():
             continue
         try:
             jobs = fetcher()
+            process_jobs(jobs, label, state, counters)
+            mark_run(state, label)
         except Exception as e:
-            print(f"fetch failed for aggregator {label}: {e}", file=sys.stderr)
-            continue
-        process_jobs(jobs, label, state, counters)
-        mark_run(state, label)
+            print(f"failed for aggregator {label}: {e}", file=sys.stderr)
+        save_state(state)
         time.sleep(0.5)
 
-    save_state(state)
     print(f"done. {counters['new_matches']} new matching posting(s), "
-          f"{counters['skipped_below_floor']} skipped (below salary floor).")
+          f"{counters['skipped_below_floor']} skipped (below salary floor), "
+          f"{counters['baseline_established']} source(s) established a fresh baseline "
+          f"(no notifications sent for those — that's expected on a first run).")
 
 
 if __name__ == "__main__":
