@@ -94,17 +94,69 @@ COMPANIES = [
 ]
 
 # ---------------------------------------------------------------------------
-# 2. KEYWORDS — matched case-insensitively against title + full description.
+# 2. KEYWORDS — matched case-insensitively, on word boundaries (see
+# KEYWORD_PATTERN below), against title + full description.
+#
+# Split into two groups purely for readability/maintenance; both are
+# searched together (see ALL_KEYWORDS). CONTROLS_GNC_KEYWORDS is the
+# original high-level controls/autonomy list. EMBEDDED_KEYWORDS was pulled
+# from your resume (STM32 / embedded-Linux / sensor-fusion stack) and the
+# RV Tech mid-point technical record (AUTOSAR / SIL-HIL / vehicle-bus
+# stack) — extend it as your own skill set grows.
 # ---------------------------------------------------------------------------
-KEYWORDS = [
+CONTROLS_GNC_KEYWORDS = [
     "controls engineer", "gnc", "guidance, navigation", "guidance and control",
-    "simulation engineer", "simulation software", "hil ", "hardware-in-the-loop",
-    "hardware in the loop", "sil ", "software-in-the-loop", "autonomy engineer",
+    "simulation engineer", "simulation software", "hil", "hardware-in-the-loop",
+    "hardware in the loop", "sil", "software-in-the-loop", "autonomy engineer",
     "autonomy software", "embedded controls", "flight software", "vehicle software",
     "robot learning", "digital twin", "sensor fusion", "state estimation",
-    "kalman", "model-based design", "mbd", "motion planning", "planning & controls",
+    "kalman", "extended kalman filter", "ekf", "complementary filter",
+    "model-based design", "mbd", "motion planning", "planning & controls",
     "planning and controls", "perception engineer", "autonomy platform",
+    "ins/gnss", "visual-inertial odometry", "6-dof state estimation",
+    "ros2", "ros 2", "dds middleware", "mavlink",
 ]
+
+EMBEDDED_KEYWORDS = [
+    # RTOS / bare-metal / firmware fundamentals
+    "rtos", "freertos", "real-time operating system", "bare-metal", "bare metal",
+    "bootloader", "watchdog timer", "interrupt service routine", "isr",
+    "device driver", "board support package", "firmware", "firmware engineer",
+    "embedded c++", "embedded c", "embedded systems engineer",
+    "embedded software engineer", "safety-critical firmware", "microcontroller",
+
+    # Vehicle / automotive bus protocols
+    "can bus", "canbus", "controller area network", "can-fd", "can fd",
+    "lin bus", "local interconnect network", "flexray", "automotive ethernet",
+    "j1939", "vehicle network",
+
+    # Automotive software standards & tooling
+    "autosar", "iso 26262", "asil", "functional safety", "fusa",
+    "canalyzer", "canape", "dbc file", "xcp protocol", "uds protocol",
+    "unified diagnostic services", "zonal controller", "body control module",
+    "requirements traceability", "jama connect",
+
+    # Microcontrollers / low-level hardware
+    "stm32", "arm cortex-m", "dma controller", "uart driver", "spi driver",
+    "i2c driver", "pwm control",
+
+    # Motor control / actuation
+    "bldc", "brushless dc motor", "motor controller firmware", "esc firmware",
+    "closed-loop motor control",
+]
+
+ALL_KEYWORDS = CONTROLS_GNC_KEYWORDS + EMBEDDED_KEYWORDS
+
+# Compiled once. \b boundaries matter here: without them, short/ambiguous
+# tokens like "isr" or "hil" would match inside unrelated words, and — the
+# reason this moved off plain substring matching — a bare "can" or "lin"
+# would match almost every job description in English. Every keyword above
+# is safe as a whole word/phrase now; no more manual trailing-space tricks
+# needed (the old "hil "/"sil " entries are gone for the same reason).
+KEYWORD_PATTERN = re.compile(
+    r'\b(?:' + '|'.join(sorted((re.escape(k) for k in ALL_KEYWORDS), key=len, reverse=True)) + r')\b',
+    re.IGNORECASE,
+)
 
 # A short high-signal subset for aggregators that charge per-query or rate
 # limit hard (Adzuna). Keep this tight — every extra term widens recall and
@@ -112,7 +164,8 @@ KEYWORDS = [
 CORE_KEYWORDS_FOR_AGGREGATORS = [
     "controls engineer", "GNC engineer", "guidance navigation control",
     "simulation engineer", "autonomy engineer", "embedded controls",
-    "sensor fusion engineer", "robot learning",
+    "sensor fusion engineer", "robot learning", "firmware engineer",
+    "embedded software engineer",
 ]
 
 # ---------------------------------------------------------------------------
@@ -154,6 +207,135 @@ def clears_floor(salary_low_high, structured_min=None, structured_max=None):
     if salary_low_high is not None:
         return salary_low_high[1] >= MIN_BASE_SALARY
     return True  # unknown salary — don't punish it, just label it unknown
+
+
+# ---------------------------------------------------------------------------
+# 3b. ELIGIBILITY FILTERS — citizenship/clearance/PR requirements, and
+# US-only location. Unlike the salary floor, these are hard gates: a role
+# you're not eligible for shouldn't reach a notification at all, so both
+# checks default to EXCLUDING when the signal is ambiguous rather than
+# letting it through unlabeled the way clears_floor() does.
+# ---------------------------------------------------------------------------
+
+# Phrases that indicate the role requires citizenship, permanent residency,
+# or a security clearance. Also covers ITAR/EAR "U.S. Person" language,
+# which functionally requires the same thing (citizen or green-card
+# holder) — extremely common in defense-adjacent postings (Anduril, Skydio,
+# Saronic, etc.).
+CITIZENSHIP_CLEARANCE_EXCLUSIONS = [
+    "u.s. citizen", "us citizen", "united states citizen", "american citizen",
+    "citizenship is required", "citizenship required", "must be a citizen",
+    "must be a u.s. citizen", "u.s. citizenship required", "proof of citizenship",
+    "permanent resident", "green card holder", "green card required",
+    "lawful permanent resident", "must be a permanent resident",
+    "security clearance", "secret clearance", "top secret clearance",
+    "ts/sci", "ts-sci", "active clearance", "clearance required",
+    "obtain and maintain a security clearance", "obtain a security clearance",
+    "eligible to obtain a security clearance", "eligible for a security clearance",
+    "u.s. person", "us person status", "must qualify as a u.s. person",
+    "itar", "ear99", "export control regulations require",
+]
+
+_ELIGIBILITY_PATTERN = re.compile(
+    r'\b(?:' + '|'.join(sorted((re.escape(k) for k in CITIZENSHIP_CLEARANCE_EXCLUSIONS), key=len, reverse=True)) + r')\b',
+    re.IGNORECASE,
+)
+
+
+def requires_excluded_status(job):
+    """True if the posting mentions a citizenship/PR/clearance requirement."""
+    haystack = f"{job['title']} {job['content']}"
+    return _ELIGIBILITY_PATTERN.search(haystack) is not None
+
+
+# US-based-only location check. Best-effort like everything else that reads
+# free-text location fields, but treated as a hard gate per the "all jobs
+# must be US-based" requirement: unconfirmed locations are EXCLUDED, not
+# passed through — the opposite default from clears_floor(). If you'd
+# rather see unconfirmed-location postings than risk losing real ones,
+# switch the "unknown -> exclude" branch below to "unknown -> include" and
+# watch the skipped_location_unconfirmed counter to judge how often it
+# fires.
+US_STATE_ABBR = {
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID",
+    "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS",
+    "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK",
+    "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
+    "WI", "WY", "DC",
+}
+US_STATE_NAMES = [
+    "alabama", "alaska", "arizona", "arkansas", "california", "colorado",
+    "connecticut", "delaware", "florida", "georgia", "hawaii", "idaho",
+    "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana",
+    "maine", "maryland", "massachusetts", "michigan", "minnesota",
+    "mississippi", "missouri", "montana", "nebraska", "nevada",
+    "new hampshire", "new jersey", "new mexico", "new york",
+    "north carolina", "north dakota", "ohio", "oklahoma", "oregon",
+    "pennsylvania", "rhode island", "south carolina", "south dakota",
+    "tennessee", "texas", "utah", "vermont", "virginia", "washington",
+    "west virginia", "wisconsin", "wyoming",
+]
+US_MARKER_RE = re.compile(
+    # (?!\w) instead of a trailing \b: literals like "u.s." end in a
+    # non-word character, and \b right after a non-word char only holds if
+    # a word char follows — which is never true at end-of-string/whitespace.
+    r'\b(?:usa|u\.s\.a?\.?|united states|remote\s*[-,(]?\s*(?:us|usa))(?!\w)',
+    re.IGNORECASE,
+)
+STATE_ABBR_RE = re.compile(r',\s*([A-Za-z]{2})\b')
+
+
+def _classify_text_us(text):
+    """Run the US/non-US heuristics against a single blob of text. Returns
+    True/False/None; shared by the location field and the title+content
+    fallback so both get the same ruleset."""
+    if not text:
+        return None
+    if US_MARKER_RE.search(text):
+        return True
+    m = STATE_ABBR_RE.search(text)
+    if m and m.group(1).upper() in US_STATE_ABBR:
+        return True
+    text_lower = text.lower()
+    if any(state in text_lower for state in US_STATE_NAMES):
+        return True
+    if _NON_US_PATTERN.search(text):
+        return False
+    return None
+
+NON_US_MARKERS = [
+    "canada", "mexico", "united kingdom", " uk ", "england", "scotland",
+    "wales", "northern ireland", "ireland", "germany", "france", "spain",
+    "italy", "netherlands", "belgium", "switzerland", "poland", "portugal",
+    "sweden", "norway", "denmark", "finland", "austria", "greece",
+    "india", "pakistan", "bangladesh", "philippines", "vietnam",
+    "singapore", "malaysia", "indonesia", "thailand", "china", "japan",
+    "south korea", "taiwan", "hong kong", "australia", "new zealand",
+    "brazil", "argentina", "chile", "colombia", "nigeria", "kenya",
+    "south africa", "egypt", "israel", "uae", "dubai", "saudi arabia",
+    "emea", "apac", "latam", "europe", "worldwide", "anywhere in the world",
+]
+_NON_US_PATTERN = re.compile(
+    r'\b(?:' + '|'.join(sorted((re.escape(k.strip()) for k in NON_US_MARKERS), key=len, reverse=True)) + r')\b',
+    re.IGNORECASE,
+)
+
+
+def classify_us_location(job):
+    """Return True (confirmed US), False (confirmed non-US), or None
+    (unconfirmed). Checks the structured location field first; if that's
+    blank or inconclusive, falls back to title + the first 500 chars of
+    content — useful for sources like HN "Who is Hiring" that have no
+    structured location field and instead put it in the posting text
+    itself (kept short deliberately, since scanning deep into a long
+    description raises the odds of a stray ", XX"-shaped false positive)."""
+    location = job.get("location", "") or ""
+    result = _classify_text_us(location)
+    if result is not None:
+        return result
+
+    fallback_text = f"{job.get('title', '')} {job.get('content', '')[:500]}"
+    return _classify_text_us(fallback_text)
 
 
 # ---------------------------------------------------------------------------
@@ -461,8 +643,8 @@ AGGREGATOR_FETCHERS = {
 
 
 def matches_keywords(job):
-    haystack = f"{job['title']} {job['content']}".lower()
-    return any(k in haystack for k in KEYWORDS)
+    haystack = f"{job['title']} {job['content']}"
+    return KEYWORD_PATTERN.search(haystack) is not None
 
 
 def load_state():
@@ -538,6 +720,18 @@ def process_jobs(jobs, source_label, state, counters):
         if not matches_keywords(job):
             continue
 
+        if requires_excluded_status(job):
+            counters["skipped_citizenship_clearance"] += 1
+            continue
+
+        us_status = classify_us_location(job)
+        if us_status is False:
+            counters["skipped_non_us"] += 1
+            continue
+        if us_status is None:
+            counters["skipped_location_unconfirmed"] += 1
+            continue
+
         extracted = extract_salary_range(job["content"])
         ok = clears_floor(extracted, job.get("salary_min"), job.get("salary_max"))
         if not ok:
@@ -566,7 +760,14 @@ def process_jobs(jobs, source_label, state, counters):
 
 def main():
     state = load_state()
-    counters = {"new_matches": 0, "skipped_below_floor": 0, "baseline_established": 0}
+    counters = {
+        "new_matches": 0,
+        "skipped_below_floor": 0,
+        "skipped_citizenship_clearance": 0,
+        "skipped_non_us": 0,
+        "skipped_location_unconfirmed": 0,
+        "baseline_established": 0,
+    }
 
     # --- Layer 1: direct ATS polling — every run, no throttle ---
     for company in COMPANIES:
@@ -604,6 +805,9 @@ def main():
 
     print(f"done. {counters['new_matches']} new matching posting(s), "
           f"{counters['skipped_below_floor']} skipped (below salary floor), "
+          f"{counters['skipped_citizenship_clearance']} skipped (citizenship/PR/clearance required), "
+          f"{counters['skipped_non_us']} skipped (confirmed non-US location), "
+          f"{counters['skipped_location_unconfirmed']} skipped (location unconfirmed), "
           f"{counters['baseline_established']} source(s) established a fresh baseline "
           f"(no notifications sent for those — that's expected on a first run).")
 
