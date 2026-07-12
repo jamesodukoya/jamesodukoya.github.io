@@ -147,7 +147,15 @@ COMPANIES = [
 # ---------------------------------------------------------------------------
 WORKDAY_COMPANIES = [
     {"name": "NVIDIA",           "tenant": "nvidia",          "wd_host": "wd5", "site": "NVIDIAExternalCareerSite"},
-    {"name": "Qualcomm",         "tenant": "qualcomm",        "wd_host": "wd5", "site": "External"},
+    # Qualcomm's old Workday instance (qualcomm.wd5/wd12) now shows a
+    # "we've moved sites" banner pointing to careers.qualcomm.com, and its
+    # CXS API returns 422 on every search — consistent with the instance
+    # being decommissioned post-migration, not a request-format bug here
+    # (NVIDIA/Aptiv/etc. use the identical request shape and work fine).
+    # careers.qualcomm.com looks like a fully custom/JS-rendered site;
+    # couldn't identify the underlying ATS from the page source. Disabled
+    # until that's confirmed rather than hammering a dead endpoint.
+    # {"name": "Qualcomm",       "tenant": "qualcomm",        "wd_host": "wd5", "site": "External"},
     {"name": "Aptiv",            "tenant": "aptiv",           "wd_host": "wd5", "site": "APTIV_CAREERS"},
     {"name": "Northrop Grumman", "tenant": "ngc",             "wd_host": "wd1", "site": "Northrop_Grumman_External_Site"},
     {"name": "Blue Origin",      "tenant": "blueorigin",      "wd_host": "wd5", "site": "BlueOrigin"},
@@ -476,7 +484,7 @@ def fetch_greenhouse(token):
         "url": j.get("absolute_url", ""),
         "content": j.get("content", "") or "",
         "salary_min": None, "salary_max": None,
-    } for j in data.get("jobs", [])]
+    } for j in (data.get("jobs") or [])]
 
 
 def fetch_lever(token):
@@ -494,15 +502,23 @@ def fetch_lever(token):
 def fetch_ashby(token):
     data = http_get_json(f"https://api.ashbyhq.com/posting-api/job-board/{token}?includeCompensation=true")
     out = []
-    for j in data.get("jobs", []):
+    # NB: Ashby returns these as an explicit JSON null when unset, not a
+    # missing key — `.get(key, default)` only falls back on a MISSING key,
+    # so `data.get("jobs", [])` still evaluates to None when the key is
+    # present with a null value. `(data.get("jobs") or [])` catches both
+    # cases. This was the actual cause of the "'NoneType' object is not
+    # iterable" failures (compensationTierSummary is null on postings
+    # without disclosed pay bands, which is common outside CA/NY/CO).
+    for j in (data.get("jobs") or []):
         comp = j.get("compensation") or {}
-        comp_str = " ".join(str(t) for t in comp.get("compensationTierSummary", []) if isinstance(comp, dict))
+        tier_summary = comp.get("compensationTierSummary") or []
+        comp_str = " ".join(str(t) for t in tier_summary)
         out.append({
             "id": f"ashby:{token}:{j.get('id', '')}",
             "title": j.get("title", ""),
             "location": j.get("location", ""),
             "url": j.get("jobUrl", ""),
-            "content": (j.get("descriptionPlain", "") or j.get("description", "") or "") + " " + comp_str,
+            "content": (j.get("descriptionPlain") or j.get("description") or "") + " " + comp_str,
             "salary_min": None, "salary_max": None,
         })
     return out
@@ -513,7 +529,7 @@ def fetch_smartrecruiters(token):
     # full description text; verify on first run for your target companies.
     data = http_get_json(f"https://api.smartrecruiters.com/v1/companies/{token}/postings")
     out = []
-    for j in data.get("content", []):
+    for j in (data.get("content") or []):
         loc = j.get("location") or {}
         loc_str = ", ".join(filter(None, [loc.get("city"), loc.get("region"), loc.get("country")]))
         jad = j.get("jobAd") if isinstance(j.get("jobAd"), dict) else {}
@@ -533,7 +549,7 @@ def fetch_workable(token):
     # Best-effort, same caveat as SmartRecruiters.
     data = http_get_json(f"https://apply.workable.com/api/v1/widget/accounts/{token}")
     out = []
-    for j in data.get("jobs", []):
+    for j in (data.get("jobs") or []):
         loc = j.get("location") or {}
         loc_str = ", ".join(filter(None, [loc.get("city"), loc.get("country")]))
         out.append({
@@ -553,7 +569,7 @@ def fetch_recruitee(token):
     # runs on this, not Greenhouse/Lever/Ashby/SmartRecruiters/Workable).
     data = http_get_json(f"https://{token}.recruitee.com/api/offers/")
     out = []
-    for j in data.get("offers", []):
+    for j in (data.get("offers") or []):
         loc_str = j.get("location") or ", ".join(
             filter(None, [j.get("city"), j.get("state_code") or j.get("state"), j.get("country")])
         )
@@ -616,7 +632,7 @@ def fetch_workday_company(company):
             # as the try/except around each Layer 1 company in main().
             print(f"workday search {term!r} failed for {company['name']}: {e}", file=sys.stderr)
             continue
-        for p in data.get("jobPostings", []):
+        for p in (data.get("jobPostings") or []):
             path = p.get("externalPath", "")
             if not path or path in seen_paths:
                 continue
@@ -667,7 +683,7 @@ def fetch_adzuna():
     url = "https://api.adzuna.com/v1/api/jobs/us/search/1?" + urllib.parse.urlencode(params)
     data = http_get_json(url)
     out = []
-    for j in data.get("results", []):
+    for j in (data.get("results") or []):
         company = (j.get("company") or {}).get("display_name", "")
         loc = (j.get("location") or {}).get("display_name", "")
         smin, smax = j.get("salary_min"), j.get("salary_max")
@@ -717,8 +733,7 @@ def fetch_remotive():
     # remote roles that do exist.
     data = http_get_json("https://remotive.com/api/remote-jobs?search=controls%20OR%20simulation%20OR%20autonomy%20OR%20robotics")
     out = []
-    for j in data.get("jobs", []):
-        smin, smax = None, None
+    for j in (data.get("jobs") or []):
         salary_text = j.get("salary", "") or ""
         extracted = extract_salary_range(salary_text)
         if extracted:
@@ -744,7 +759,7 @@ def fetch_hn_whoishiring():
         latest = http_get_json(
             "https://hn.algolia.com/api/v1/search?tags=story,author_whoishiring&hitsPerPage=1"
         )
-        hits = latest.get("hits", [])
+        hits = latest.get("hits") or []
         if not hits:
             return []
         story_id = hits[0]["objectID"]
@@ -756,7 +771,7 @@ def fetch_hn_whoishiring():
         f"https://hn.algolia.com/api/v1/search_by_date?tags=comment,story_{story_id}&hitsPerPage=500"
     )
     out = []
-    for c in comments.get("hits", []):
+    for c in (comments.get("hits") or []):
         # Only top-level comments are postings; replies are discussion.
         if str(c.get("parent_id")) != str(story_id):
             continue
