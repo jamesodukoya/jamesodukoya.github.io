@@ -955,9 +955,11 @@ def main():
     for company in WORKDAY_COMPANIES:
         label = f"workday:{company['tenant']}:{company['site']}"
         if not should_run(state, label, WORKDAY_MIN_HOURS_BETWEEN_POLLS):
+            print(f"{label}: skipped this cycle (throttled, runs every {WORKDAY_MIN_HOURS_BETWEEN_POLLS}h)", file=sys.stderr)
             continue
         try:
             jobs = fetch_workday_company(company)
+            print(f"{label}: fetched {len(jobs)} raw posting(s)", file=sys.stderr)
             for job in jobs:
                 job["company"] = company["name"]
             process_jobs(jobs, label, state, counters)
@@ -970,9 +972,14 @@ def main():
     # --- Layer 2: broad aggregators — throttled per source ---
     for label, (fetcher, min_hours) in AGGREGATOR_FETCHERS.items():
         if not should_run(state, label, min_hours):
+            print(f"{label}: skipped this cycle (throttled, runs every {min_hours}h)", file=sys.stderr)
             continue
         try:
             jobs = fetcher()
+            # Raw count, before keyword/eligibility/salary filtering — this
+            # is the line to look for to confirm a source actually ran and
+            # is reachable, independent of whether anything matched.
+            print(f"{label}: fetched {len(jobs)} raw posting(s)", file=sys.stderr)
             process_jobs(jobs, label, state, counters)
             mark_run(state, label)
         except Exception as e:
