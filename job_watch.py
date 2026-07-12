@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """
-job_watch.py — a two-layer job radar.
+job_watch.py — a job radar with three polling tiers.
 
 LAYER 1 — Direct ATS polling (Greenhouse, Lever, Ashby, SmartRecruiters,
-Workable). These are your hand-picked target companies. Each has a public,
-unauthenticated JSON feed that IS the source — no aggregation lag. This
-layer runs every cycle (see job-watch.yml, every 15 min) and is why you'll
-see a posting minutes after it goes up, not hours or days later.
+Workable, Recruitee). These are your hand-picked target companies. Each has
+a public, unauthenticated JSON feed that IS the source — no aggregation
+lag. This layer runs every cycle (see job-watch.yml, every 15 min) and is
+why you'll see a posting minutes after it goes up, not hours or days later.
+
+LAYER 1B — Workday polling (NVIDIA, Qualcomm, Aptiv, Northrop Grumman, Blue
+Origin, Boston Dynamics). Workday's job-search endpoint is public and
+unauthenticated the same way the Layer 1 ATSs are, but it's search-based
+(several POST requests per company per poll) rather than one cheap GET, so
+it runs on its own, slower throttle instead of every cycle. See section 1b
+for the mechanics.
 
 LAYER 2 — Broad aggregators (Adzuna, RemoteOK, Remotive, HN "Who is
 Hiring?"), for coverage beyond your hand-picked list. These are legitimate,
@@ -20,14 +27,17 @@ provider's own rate-limit/ToS guidance (see comments on each fetcher) —
 it will not hit them every 15 minutes even though the workflow runs that
 often.
 
-Both layers share the same keyword filter and salary-floor logic, so a
+All three tiers share the same keyword filter, eligibility filters
+(citizenship/clearance/PR, US-only location), and salary-floor logic, so a
 match is a match regardless of where it came from.
 
-Realistic freshness: Layer 1 postings are typically visible within minutes.
-Layer 2 postings depend on the aggregator's own ingestion pipeline (Adzuna
-and Remotive both pull from other sources with their own lag), but between
-the polling cadence here and each provider's stated refresh behavior, that
-comfortably lands within a 24-hour window, which was the target.
+Realistic freshness: Layer 1 postings are typically visible within
+minutes. Layer 1b (Workday) lags by however long WORKDAY_MIN_HOURS_BETWEEN_
+POLLS is set to. Layer 2 postings depend on the aggregator's own ingestion
+pipeline (Adzuna and Remotive both pull from other sources with their own
+lag), but between the polling cadence here and each provider's stated
+refresh behavior, that comfortably lands within a 24-hour window, which was
+the target.
 """
 
 import json
@@ -42,16 +52,25 @@ import urllib.error
 # ---------------------------------------------------------------------------
 # 1. TARGET COMPANIES (Layer 1 — direct ATS polling)
 #
-# ats:   "greenhouse" | "lever" | "ashby" | "smartrecruiters" | "workable"
+# ats:   "greenhouse" | "lever" | "ashby" | "smartrecruiters" | "workable" | "recruitee"
 # token: the slug from the company's careers URL:
-#          boards.greenhouse.io/{token}        -> ats="greenhouse"
+#          boards-api.greenhouse.io/v1/boards/{token}  -> ats="greenhouse"
+#            (the public HTML board itself now lives at job-boards.greenhouse.io/{token} —
+#            some companies have started rotating that token to a random,
+#            non-guessable string as an anti-scraping measure. If a
+#            greenhouse entry below starts 404ing, that's almost certainly
+#            why; check the company's current /careers link for the new
+#            token rather than assuming the API endpoint moved.)
 #          jobs.lever.co/{token}                -> ats="lever"
 #          jobs.ashbyhq.com/{token}             -> ats="ashby"
 #          jobs.smartrecruiters.com/{token}     -> ats="smartrecruiters"
 #          apply.workable.com/{token}           -> ats="workable"
-#        Not on one of these five (a *.myworkdayjobs.com URL, or a fully
-#        custom-built page)? Layer 2 is your best coverage for it; there's
-#        no clean feed for this script to poll directly.
+#          {token}.recruitee.com                -> ats="recruitee"
+#        Not on one of these six, and not on Workday either (see
+#        WORKDAY_COMPANIES in section 1b below)? Layer 2 is your best
+#        coverage for it; there's no clean feed for this script to poll
+#        directly. Notably iCIMS (AMD, Joby Aviation) has no consistent
+#        public JSON feed across companies the way the six above do.
 # ---------------------------------------------------------------------------
 COMPANIES = [
     # --- Autonomous vehicles / robotaxi -------------------------------
@@ -66,34 +85,75 @@ COMPANIES = [
 
     # --- Defense autonomy / drones / maritime ----------------------------
     {"name": "Anduril",            "ats": "greenhouse", "token": "andurilindustries"},
-    {"name": "Skydio",             "ats": "greenhouse", "token": "skydio"},
+    # Skydio moved off Greenhouse to Ashby at some point — this is the fix
+    # for the 404 you hit. Confirmed live at jobs.ashbyhq.com/skydio.
+    {"name": "Skydio",             "ats": "ashby",       "token": "skydio"},
     {"name": "Saronic",            "ats": "lever",       "token": "saronic"},
-    # {"name": "Shield AI",         "ats": "???", "token": "???"},   # TODO
-    # {"name": "Epirus",            "ats": "???", "token": "???"},   # TODO
+    {"name": "Shield AI",          "ats": "lever",       "token": "shieldai"},
+    # {"name": "Epirus",            "ats": "???", "token": "???"},   # TODO — couldn't confirm an ATS for this one
 
     # --- Humanoid / general-purpose robotics ----------------------------
     {"name": "Figure AI",          "ats": "greenhouse", "token": "figureai"},
     {"name": "Apptronik",          "ats": "greenhouse", "token": "apptronik"},
     {"name": "Skild AI",           "ats": "greenhouse", "token": "skildai-careers"},
-    # {"name": "1X Technologies",   "ats": "???", "token": "???"},   # TODO
-    # {"name": "Physical Intelligence", "ats": "???", "token": "???"}, # TODO
-    # {"name": "Boston Dynamics",   "ats": "???", "token": "???"},   # TODO
+    {"name": "1X Technologies",    "ats": "recruitee",   "token": "1x"},
+    {"name": "Physical Intelligence", "ats": "ashby",    "token": "physicalintelligence"},
+    # Boston Dynamics is on Workday, not one of the six GET-based ATSs —
+    # see WORKDAY_COMPANIES below instead of here.
 
     # --- Simulation / vehicle software tooling ---------------------------
-    {"name": "Applied Intuition",  "ats": "greenhouse", "token": "appliedintuition"},
+    # Applied Intuition rotated its public Greenhouse board token to a
+    # long random string (job-boards.greenhouse.io/co58owxt...), which is
+    # the other 404 you hit — this reads as a deliberate anti-scraping
+    # move on their end, not a broken/moved feed, so it's disabled here
+    # rather than hardcoding a token that's designed to be replaced.
+    # Layer 2 (Adzuna/Remotive/HN) is the fallback for their postings.
+    # {"name": "Applied Intuition", "ats": "greenhouse", "token": "???"},  # TODO — token rotates
 
     # --- Space / launch ----------------------------------------------------
     {"name": "Relativity Space",   "ats": "greenhouse", "token": "relativity"},  # verify on first run
-    # {"name": "Stoke Space",       "ats": "???", "token": "???"},   # TODO
-    # {"name": "Astranis",          "ats": "???", "token": "???"},   # TODO
+    {"name": "Astranis",           "ats": "greenhouse", "token": "astranis"},
+    # {"name": "Stoke Space",       "ats": "???", "token": "???"},   # TODO — couldn't confirm an ATS for this one
 
     # --- Custom career sites — Layer 1 can't reach these; Layer 2 covers
     # the gap. Left here as a visible reminder, not a working entry:
-    # SpaceX, Blue Origin, Joby Aviation (iCIMS), Rivian/RV Tech and
-    # Tesla (likely Workday).
+    # SpaceX, Joby Aviation (iCIMS), AMD (iCIMS/Jibe — checked; no public
+    # feed), Rivian/RV Tech, Lockheed Martin (mid-migration to a new
+    # careers platform as of this writing — worth re-checking later), and
+    # Tesla (fully custom site — the old comment here guessed Workday;
+    # checked, that guess was wrong, so removed from the Workday list too).
 ]
 
 # ---------------------------------------------------------------------------
+# 1b. WORKDAY COMPANIES (Layer 1b — throttled polling, not every 15 min)
+#
+# Workday's job-search API (the "CXS" endpoint) is a public, unauthenticated
+# POST endpoint the same way Greenhouse/Lever/etc. are GET endpoints — it's
+# just structured differently (search-based, not a single "list everything"
+# call) and undocumented/unofficial rather than a published API. It's what
+# NVIDIA, Qualcomm, Aptiv, Northrop Grumman, Blue Origin, and Boston
+# Dynamics all run on, which covers a big chunk of "high-paying, matches my
+# skills" that Greenhouse/Lever/Ashby simply don't reach.
+#
+# Because each company needs several search-term requests per poll (see
+# fetch_workday_company below) rather than one cheap GET, this runs on its
+# own throttle (WORKDAY_MIN_HOURS_BETWEEN_POLLS) instead of every cycle —
+# same reasoning as Layer 2, different mechanism.
+#
+# tenant / wd_host / site come from the company's careers URL:
+#   https://{tenant}.{wd_host}.myworkdayjobs.com/{site}
+# e.g. https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+#        -> tenant="nvidia", wd_host="wd5", site="NVIDIAExternalCareerSite"
+# ---------------------------------------------------------------------------
+WORKDAY_COMPANIES = [
+    {"name": "NVIDIA",           "tenant": "nvidia",          "wd_host": "wd5", "site": "NVIDIAExternalCareerSite"},
+    {"name": "Qualcomm",         "tenant": "qualcomm",        "wd_host": "wd5", "site": "External"},
+    {"name": "Aptiv",            "tenant": "aptiv",           "wd_host": "wd5", "site": "APTIV_CAREERS"},
+    {"name": "Northrop Grumman", "tenant": "ngc",             "wd_host": "wd1", "site": "Northrop_Grumman_External_Site"},
+    {"name": "Blue Origin",      "tenant": "blueorigin",      "wd_host": "wd5", "site": "BlueOrigin"},
+    {"name": "Boston Dynamics",  "tenant": "bostondynamics",  "wd_host": "wd1", "site": "Boston_Dynamics"},
+]
+WORKDAY_MIN_HOURS_BETWEEN_POLLS = 3
 # 2. KEYWORDS — matched case-insensitively, on word boundaries (see
 # KEYWORD_PATTERN below), against title + full description.
 #
@@ -487,13 +547,95 @@ def fetch_workable(token):
     return out
 
 
+def fetch_recruitee(token):
+    # https://{token}.recruitee.com/api/offers/ — public, unauthenticated,
+    # no key. New addition alongside the original five (1X Technologies
+    # runs on this, not Greenhouse/Lever/Ashby/SmartRecruiters/Workable).
+    data = http_get_json(f"https://{token}.recruitee.com/api/offers/")
+    out = []
+    for j in data.get("offers", []):
+        loc_str = j.get("location") or ", ".join(
+            filter(None, [j.get("city"), j.get("state_code") or j.get("state"), j.get("country")])
+        )
+        content = " ".join(filter(None, [j.get("description", ""), j.get("requirements", "")]))
+        out.append({
+            "id": f"recruitee:{token}:{j.get('id', '')}",
+            "title": j.get("title", ""),
+            "location": loc_str,
+            "url": j.get("careers_url") or j.get("careers_apply_url", ""),
+            "content": strip_html(content),
+            "salary_min": None, "salary_max": None,
+        })
+    return out
+
+
 ATS_FETCHERS = {
     "greenhouse": fetch_greenhouse,
     "lever": fetch_lever,
     "ashby": fetch_ashby,
     "smartrecruiters": fetch_smartrecruiters,
     "workable": fetch_workable,
+    "recruitee": fetch_recruitee,
 }
+
+# ---------------------------------------------------------------------------
+# 5a-bis. WORKDAY FETCHER — see WORKDAY_COMPANIES (section 1b) for why this
+# is a separate, throttled code path instead of living in ATS_FETCHERS.
+#
+# Workday's job-search endpoint is search-based, not "list everything," so
+# this runs one POST per term in CORE_KEYWORDS_FOR_AGGREGATORS (reused
+# rather than maintaining a second near-duplicate keyword list) and
+# de-duplicates results by externalPath. Each search is capped at one page
+# (limit=20) — Workday ranks by relevance, and a niche technical term
+# rarely has more than 20 genuinely relevant hits at a single company;
+# raising this trades more requests for more recall.
+#
+# This is an unofficial-but-widely-used pattern (the same one several
+# commercial job-scraping tools rely on), not a documented Workday API —
+# verify the field names still match on your first run. If Workday changes
+# the response shape, this fails the same way every other fetcher does
+# here: logged to stderr, the rest of the run continues.
+# ---------------------------------------------------------------------------
+def fetch_workday_company(company):
+    tenant, wd_host, site = company["tenant"], company["wd_host"], company["site"]
+    base = f"https://{tenant}.{wd_host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}"
+    out = []
+    seen_paths = set()
+    for term in CORE_KEYWORDS_FOR_AGGREGATORS:
+        body = json.dumps({"appliedFacets": {}, "limit": 20, "offset": 0, "searchText": term}).encode("utf-8")
+        req = urllib.request.Request(
+            base + "/jobs", data=body, method="POST",
+            headers={"Content-Type": "application/json", "User-Agent": "job-watch/2.0"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except Exception as e:
+            # Broad and per-term on purpose: one bad search term shouldn't
+            # cost you the other terms for this company, same philosophy
+            # as the try/except around each Layer 1 company in main().
+            print(f"workday search {term!r} failed for {company['name']}: {e}", file=sys.stderr)
+            continue
+        for p in data.get("jobPostings", []):
+            path = p.get("externalPath", "")
+            if not path or path in seen_paths:
+                continue
+            seen_paths.add(path)
+            bullets = " ".join(p.get("bulletFields", []) or [])
+            out.append({
+                "id": f"workday:{tenant}:{path}",
+                "title": p.get("title", ""),
+                "location": p.get("locationsText", "") or p.get("primaryLocation", ""),
+                "url": f"https://{tenant}.{wd_host}.myworkdayjobs.com/{site}{path}",
+                # List-view only, no per-job description fetch — see the
+                # section 1b comment on why. bulletFields often includes
+                # the pay range chip on CA/NY/CO-transparency postings,
+                # which is what lets extract_salary_range still find it.
+                "content": f"{p.get('title', '')} {bullets}",
+                "salary_min": None, "salary_max": None,
+            })
+        time.sleep(0.3)  # polite gap between per-term searches against the same tenant
+    return out
 
 # ---------------------------------------------------------------------------
 # 5b. LAYER 2 FETCHERS — broad, legitimate aggregators. Each throttled to
@@ -788,6 +930,26 @@ def main():
             # the run down with it.
             print(f"failed for {name} ({ats}:{token}): {e}", file=sys.stderr)
         save_state(state)  # incremental — a later crash won't erase this company's progress
+        time.sleep(0.5)
+
+    # --- Layer 1b: Workday polling — throttled, unlike Layer 1 above.
+    # Each company here costs several POST requests (one per search term)
+    # instead of one cheap GET, so it runs on WORKDAY_MIN_HOURS_BETWEEN_POLLS
+    # rather than every cycle. See section 1b for why these companies
+    # aren't just in COMPANIES with the other five ATSs.
+    for company in WORKDAY_COMPANIES:
+        label = f"workday:{company['tenant']}:{company['site']}"
+        if not should_run(state, label, WORKDAY_MIN_HOURS_BETWEEN_POLLS):
+            continue
+        try:
+            jobs = fetch_workday_company(company)
+            for job in jobs:
+                job["company"] = company["name"]
+            process_jobs(jobs, label, state, counters)
+            mark_run(state, label)
+        except Exception as e:
+            print(f"failed for {company['name']} ({label}): {e}", file=sys.stderr)
+        save_state(state)
         time.sleep(0.5)
 
     # --- Layer 2: broad aggregators — throttled per source ---
